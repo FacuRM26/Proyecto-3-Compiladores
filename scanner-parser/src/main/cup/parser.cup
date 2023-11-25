@@ -119,6 +119,7 @@ precedence left TIMES, DIVIDE, MODULE, POWER;
 precedence right NOT;
 precedence left LPAREN;
 
+
 start with program;
 
 
@@ -340,14 +341,77 @@ aritmeticExpression ::= operand:n
 
 | aritmeticExpression:e1 aritmeticOp:op aritmeticExpression:e2
 {:
+    //codigo mips
+    String operand = op.toString(); 
+    String opInstr = "";
+    String codigo = "";
+    String lastRegister = e1.toString().split(":")[1];
+    String tipo = e1.toString().split(":")[2];
+    switch(tipo){
+        case "int":
+            if (operand.equals("+")) {
+                opInstr  = "add ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
 
-    String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
-    String temporale1 = lineas[lineas.length - 1];
-    temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+ currentTemp++ +" = " + temporale1 + op + "t"+(currentTemp-2);
+            } else if (operand.equals("-")) {
+                opInstr  = "sub ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
 
+            } else if (operand.equals("*")) {
+                opInstr  = "mul ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+
+            } else if (operand.equals("/")) {
+                opInstr  = "div ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+
+            } else if (operand.equals("%")) {
+                opInstr  = "div ";  
+                String temp = "$t" + currentTemp++;  
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \nli " +temp+ ",0 \n"+  opInstr + lastRegister + "," + e2.toString().split(":")[1] +"\nmfhi "+ temp+ ":" + temp + ":" + tipo;
+            } else if (operand.equals("^")) {
+                opInstr  = "pow ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+
+            }
+            break;
+
+        case "float":
+            if(operand.equals("+"))
+            {
+                opInstr  = "add.s ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+            }
+            else if(operand.equals("-"))
+            {
+                opInstr  = "sub.s ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+            }
+            else if(operand.equals("*"))
+            {
+                opInstr  = "mul.s ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+            }
+            else if(operand. equals("/"))
+            {
+                opInstr  = "div.s ";    
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+            }
+            else if(operand.equals("%"))
+            {
+                opInstr  = "div.s ";  
+                String temp = "$f" + floatTemp++;  
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \n"+  opInstr +lastRegister + ", "+ lastRegister + "," + e2.toString().split(":")[1] +
+                "\nmflo "+ temp+ "\nmul.s " + temp + ", " + temp + ", " + e2.toString().split(":")[1] + "\nsub.s $f12 , " +lastRegister +"," +temp + ":" + "$f12:" + tipo;
+            }
+            else if(operand.equals("^"))
+            {
+                opInstr  = "pow.s ";    
+                codigo = "";
+            }
+            break;
+    }
     RESULT = codigo;
-
 :}
 
 | LPAREN aritmeticExpression:e1 RPAREN
