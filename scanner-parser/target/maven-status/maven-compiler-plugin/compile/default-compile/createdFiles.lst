@@ -1,5 +1,12 @@
+<<<<<<< Updated upstream
+=======
+com\compiladores\Intermedio.class
+com\compiladores\Intermedio$CUP$Intermedio$actions.class
+>>>>>>> Stashed changes
 com\compiladores\Lexer.class
 com\compiladores\parser.class
 com\compiladores\App.class
 com\compiladores\sym.class
+com\compiladores\IntermedioSym.class
+com\compiladores\App.class
 com\compiladores\parser$CUP$parser$actions.class

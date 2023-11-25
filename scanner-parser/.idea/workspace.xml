@@ -6,12 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="d7af08d1-e724-4b2a-92b5-4c63bf52ddc3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/src/main/cup/parser.cup" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/cup/parser.cup" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/compiladores/fuente.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/compiladores/fuente.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/compiladores/mips.s" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/compiladores/mips.s" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/compiladores/parser$CUP$parser$actions.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/compiladores/parser$CUP$parser$actions.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/generated-sources/cup/com/compiladores/parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/target/generated-sources/cup/com/compiladores/parser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/scanner-parser-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/target/scanner-parser-1.0-SNAPSHOT.jar" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/target/classes/com/compiladores/fuente.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/compiladores/intermedio.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/compiladores/tokens.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/scanner-parser-1.0-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/target/scanner-parser-1.0-SNAPSHOT.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/2023-11-23T18-13-13_854.dumpstream" beforeDir="false" />
+>>>>>>> Stashed changes
       <change beforePath="$PROJECT_DIR$/target/surefire-reports/TEST-com.compiladores.AppTest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/TEST-com.compiladores.AppTest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/surefire-reports/com.compiladores.AppTest.txt" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/com.compiladores.AppTest.txt" afterDir="false" />
     </list>
@@ -37,6 +49,7 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+<<<<<<< Updated upstream
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
@@ -53,8 +66,22 @@
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
     "vue.rearranger.settings.migration": "true"
+=======
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Casa/Fabricio/TEC/Compi/Proyecto 3/Programa/Proyecto-3-Compiladores/scanner-parser&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+>>>>>>> Stashed changes
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Casa\Fabricio\TEC\Compi\Proyecto 3\Programa\Proyecto-2-Compiladores\scanner-parser\src\main\cup" />
@@ -281,7 +308,11 @@
       <workItem from="1700583037203" duration="4300000" />
       <workItem from="1700777924861" duration="998000" />
       <workItem from="1700780370384" duration="4434000" />
+<<<<<<< Updated upstream
       <workItem from="1700852611184" duration="14619000" />
+=======
+      <workItem from="1700785474747" duration="262000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>

@@ -1,0 +1,5 @@
+# Created at 2023-11-23T18:25:05.076
+Boot Manifest-JAR contains absolute paths in classpath 'E:\Casa\Fabricio\TEC\Compi\Proyecto 3\Programa\Proyecto-3-Compiladores\scanner-parser\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
