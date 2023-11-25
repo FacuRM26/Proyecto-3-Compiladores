@@ -688,8 +688,11 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
 
     StringBuffer mipsCode = new StringBuffer(); // Para concatenar el código mips
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
-    int currentTemp = 1; // Para generar los temporales
+    int currentTemp = 0; // Para generar los temporales
+    int floatTemp = 0; // Para generar los temporales de float
+
     int structs = 0; // Para generar las etiquetas de las estructuras de control
+    int lastParam = 3; // Para saber el último parámetro de una función
 
 
 public StringBuffer getmipsCode() { // Para obtener el código intermedio
@@ -922,7 +925,43 @@ class CUP$parser$actions {
 		int nright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object n = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    String codigo = "t"+currentTemp++ +" = "+n.toString().split(":")[0];
+   
+    String tipo = n.toString().split(":")[1];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+     switch(tipo){
+        case "int":
+            movInstr = "li ";    
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "float":
+            movInstr = "li.s ";
+            lastRegister = "$f" + floatTemp++;
+            break;
+
+        case "bool":
+            movInstr = "li ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "char":
+            movInstr = "li ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "string":
+            movInstr = "la ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        default:
+            break;
+    }
+
+    codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
     RESULT = codigo;
 
 
@@ -938,8 +977,43 @@ class CUP$parser$actions {
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object id = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    //code 3d
-    String codigo = "t"+currentTemp++ +" = "+id.toString();
+
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+     switch(tipo){
+        case "int":
+            movInstr = "lw ";    
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "float":
+            movInstr = "l.s ";
+            lastRegister = "$f" + floatTemp++;
+            break;
+
+        case "bool":
+            movInstr = "lw ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "char":
+            movInstr = "lb ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "string":
+            movInstr = "la ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        default:
+            break;
+    }
+
+    codigo = movInstr + lastRegister+", "+ id.toString() + ":" + lastRegister + ":" + tipo;
     RESULT = codigo;
 
 
@@ -1764,7 +1838,16 @@ class CUP$parser$actions {
 		int idVarright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object idVar = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    //code mips
+
+    //Agregar a la tabla de simbolos
+    String[] symbol = new String[3];
+    symbol[0] = "Variable";
+    symbol[1] = idVar.toString();
+    symbol[2] = t.toString();
+    tablasDeSimbolos.get(currentHash).add(symbol);
+
+
+    //Codigo MIPS
     switch(t.toString()){
         case "int":
             variables.append(idVar.toString()+": .word 0\n");
@@ -1784,8 +1867,8 @@ class CUP$parser$actions {
         default :
             break;
     }
-    RESULT= t.toString()+" "+idVar.toString();
 
+    RESULT= t.toString()+" "+idVar.toString();
 
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("varIdentifier",33, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -1810,14 +1893,38 @@ class CUP$parser$actions {
 		int idleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).left;
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).right;
 		Object id = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 
-    //code 3d
-    String code = e1.toString()+"\n"+id.toString()+" = ";
+    String exprCode = e.toString().split(":")[0];
+    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2];
 
+    String movInstr = "";
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "sw ";    
+            break;
+        case "float":
+            movInstr = "s.s ";
+            break;
+        case "bool":
+            movInstr = "sw ";
+            break;
+        case "char":
+            movInstr = "sb ";
+            break;
+        case "string": //revisar strings
+            movInstr = "sb ";
+            break;
+        default:
+            break;
+    }
+
+    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString();
     RESULT = code;
 
 
@@ -1836,7 +1943,7 @@ class CUP$parser$actions {
 		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //code mips
+ 
     String code = vi.toString() + "\n" + e1.toString() + "\n" ;
     switch(vi.toString().split(" ")[0]){
         case "int":
@@ -1885,14 +1992,42 @@ class CUP$parser$actions {
           case 60: // printData ::= PRINT PRINTSYMBOL expression ENDLINE 
             {
               Object RESULT =null;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //code 3d
-    String codigo = e1.toString() + "\n" + "PRINT t"+(currentTemp-1)+"\n";
-    RESULT = codigo;
 
+    String exprCode = e.toString().split(":")[0];
+    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2];
+    String code = "";
+
+    switch(tipoExpr){
+        case "int":
+            code = "li $v0, 1\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "float":
+            code = "li $v0, 2\n" + "mov.s $f12, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "bool":
+            code = "li $v0, 1\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "char":
+            code = "li $v0, 11\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "string":
+            code = "li $v0, 4\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        default:
+            break;
+    }
+
+    RESULT = exprCode + "\n" + code;
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("printData",18, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -1907,10 +2042,55 @@ class CUP$parser$actions {
 		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
 
-    //code 3d
-    String codigo = e.toString()+"\nparam "+ "t"+(currentTemp-1)+"\n"+"1";
-    RESULT = codigo;
+    String tipoExpr = e.toString().split(":")[1];
+    String lastRegister = e.toString().split(":")[0];
 
+    String movInstr = "";
+    String code = "";
+
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "li";    
+            break;
+        case "float":
+            movInstr = "li.s";
+            break;
+        case "bool":
+            movInstr = "li";
+            break;
+        case "char":
+            movInstr = "lb";
+            break;
+        case "string":
+            movInstr = "la";
+            break;
+        default:
+            break;
+    } 
+
+    switch(lastParam) {
+        case 1:
+            code = movInstr + " $a2, "+ lastRegister;
+            lastParam = 2;
+            break;
+        case 2:
+            code = movInstr + " $a3, "+ lastRegister;
+            lastParam = 3;
+            break;
+        case 3:
+            code = movInstr +" $a0, "+ lastRegister;
+            lastParam = 0;
+            break;
+        case 0:
+            code = movInstr + " $a1, "+ lastRegister;
+            lastParam = 1;
+            break;
+        default:
+            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
+    }
+
+    RESULT = code;
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("sendParameters",41, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -1927,12 +2107,56 @@ class CUP$parser$actions {
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    //code 3d
-    String cantParameters = sp.toString().split("\n")[sp.toString().split("\n").length-1];
-    String sp1 = sp.toString().substring(0, sp.toString().lastIndexOf("\n"));
 
-    String codigo = sp1.toString() + "\n" + e.toString()+"\nparam "+ "t"+(currentTemp-1)+"\n"+(Integer.parseInt(cantParameters)+1);
-    RESULT = codigo;
+    String tipoExpr = e.toString().split(":")[1];
+    String lastRegister = e.toString().split(":")[0];
+
+    String movInstr = "";
+    String code = "";
+
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "li";    
+            break;
+        case "float":
+            movInstr = "li.s";
+            break;
+        case "bool":
+            movInstr = "li";
+            break;
+        case "char":
+            movInstr = "lb";
+            break;
+        case "string":
+            movInstr = "la";
+            break;
+        default:
+            break;
+    } 
+
+    switch(lastParam) {
+        case 1:
+            code = movInstr + " $a2, "+ lastRegister;
+            lastParam = 2;
+            break;
+        case 2:
+            code = movInstr + " $a3, "+ lastRegister;
+            lastParam = 3;
+            break;
+        case 3:
+            code = movInstr +" $a0, "+ lastRegister;
+            lastParam = 0;
+            break;
+        case 0:
+            code = movInstr + " $a1, "+ lastRegister;
+            lastParam = 1;
+            break;
+        default:
+            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
+    }
+
+    RESULT = sp.toString() + "\n" + code;
 
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("sendParameters",41, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -1951,11 +2175,7 @@ class CUP$parser$actions {
 		Object sp = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 
-    //code 3d
-    String cantParameters = sp.toString().split("\n")[sp.toString().split("\n").length-1];
-    String sp1 = sp.toString().substring(0, sp.toString().lastIndexOf("\n"));
-
-    String codigo = sp1.toString() + "\nt"+(currentTemp++)+ " = call "+id.toString()+", "+cantParameters;
+    String codigo = sp.toString() + "jal "+id.toString();
     RESULT = codigo;
 
 
@@ -1971,7 +2191,7 @@ class CUP$parser$actions {
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
 		Object id = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
 		
-    String codigo = "t"+currentTemp++ +" call "+id.toString()+", 0";
+    String codigo = "jal "+id.toString();
     RESULT = codigo;
 
 
@@ -1987,7 +2207,6 @@ class CUP$parser$actions {
 		int cfright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object cf = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-        //code 3d
         RESULT = cf;
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("callFunction_statement",36, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2002,9 +2221,10 @@ class CUP$parser$actions {
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object e = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //code 3d
-    String codigo = e.toString()+"\n"+"return t"+(currentTemp-1);
+
+    String codigo = e.toString() + "\n" + "  jr $ra";
     RESULT = codigo;
+
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("return_statement",34, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2015,9 +2235,10 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 		
-    //code 3d
-    String codigo = "return";
+   
+    String codigo = "  jr $ra";
     RESULT = codigo;
+
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("return_statement",34, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2243,8 +2464,27 @@ class CUP$parser$actions {
 		int idParamright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object idParam = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    String code = "data_"+t.toString()+" "+idParam.toString()+"\n";
-    RESULT = code;
+     
+    switch(t.toString()){
+        case "int":
+            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            break;
+        case "float":
+            variables.append(currentHash + "_" + idParam.toString()+": .float 0.0\n");
+            break;
+        case "bool":
+            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            break;
+        case "char":
+            variables.append(currentHash + "_" + idParam.toString()+": .byte 0\n");
+            break;
+        case "string":
+            variables.append(currentHash + "_" + idParam.toString()+": .asciiz \"\"\n");
+            break;
+        default :
+            break;
+    }
+  
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parameter",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2254,12 +2494,6 @@ class CUP$parser$actions {
           case 86: // parameters ::= parameter 
             {
               Object RESULT =null;
-		int pleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int pright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Object p = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
-    RESULT = p;
-
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parameters",5, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2269,14 +2503,6 @@ class CUP$parser$actions {
           case 87: // parameters ::= parameters COMMA parameter 
             {
               Object RESULT =null;
-		int psleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
-		int psright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
-		Object ps = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
-		int pleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int pright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Object p = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
-    RESULT = ps.toString() + p.toString();
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parameters",5, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2293,7 +2519,6 @@ class CUP$parser$actions {
 		int idFuncright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object idFunc = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-
 
     //  Definir el tipo de tabla
         String tipoTabla = "main";
@@ -2315,7 +2540,7 @@ class CUP$parser$actions {
 
        //Codigo MIPS
         currentTemp = 1;
-        String codigo = "\nbegin_func_"+idFunc.toString()+":\n";
+        String codigo = idFunc.toString()+":\n";
         RESULT = codigo;
 
 
@@ -2331,17 +2556,14 @@ class CUP$parser$actions {
 		int fileft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)).left;
 		int firight = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)).right;
 		Object fi = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-6)).value;
-		int psleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)).left;
-		int psright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)).right;
-		Object ps = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-4)).value;
 		int stleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int stright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object st = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 
-    //Codigo MIPS
-    String cierreFuncion = fi.toString().replace("begin", "end");
-    String code = fi.toString() + ps.toString()+ st.toString() + cierreFuncion;
+
+    String cierreFuncion = "\nend_"+fi.toString();
+    String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
 
@@ -2360,8 +2582,8 @@ class CUP$parser$actions {
 		int stright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object st = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //Codigo MIPS
-    String cierreFuncion = fi.toString().replace("begin", "end");
+   
+    String cierreFuncion = "\nend_"+fi.toString();
     String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
@@ -2413,7 +2635,10 @@ class CUP$parser$actions {
 		int declleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int declright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object decl = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = decl; 
+		 
+    RESULT = decl; 
+    
+
               CUP$parser$result = parser.getSymbolFactory().newSymbol("globalVariable",39, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2425,7 +2650,11 @@ class CUP$parser$actions {
 		int dclaleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int dclaright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object dcla = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = dcla; 
+		 
+
+    RESULT = dcla; 
+
+
               CUP$parser$result = parser.getSymbolFactory().newSymbol("globalVariable",39, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2437,7 +2666,11 @@ class CUP$parser$actions {
 		int gvleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int gvright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object gv = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = gv; 
+		 
+
+    RESULT = gv; 
+    
+
               CUP$parser$result = parser.getSymbolFactory().newSymbol("globalVariables",40, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2452,7 +2685,11 @@ class CUP$parser$actions {
 		int gvleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int gvright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object gv = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = gvs.toString()+gv.toString(); 
+		 
+    
+    RESULT = gvs.toString()+gv.toString(); 
+
+
               CUP$parser$result = parser.getSymbolFactory().newSymbol("globalVariables",40, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2461,13 +2698,15 @@ class CUP$parser$actions {
           case 98: // program ::= globalVariables 
             {
               Object RESULT =null;
-		int gvsleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int gvsright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Object gvs = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+
     String dataSection = ".data\n";
+    String textSection = ".text\n";
     mipsCode.append(dataSection);
     mipsCode.append(variables.toString());
+    mipsCode.append(textSection);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("program",3, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2481,6 +2720,7 @@ class CUP$parser$actions {
 		int fsright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object fs = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+
     String dataSection = ".data\n";
     String textSection = ".text\n";
     String code = fs.toString();
@@ -2488,6 +2728,9 @@ class CUP$parser$actions {
     mipsCode.append(variables.toString());
     mipsCode.append(textSection);
     mipsCode.append(code);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
+
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("program",3, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2504,6 +2747,7 @@ class CUP$parser$actions {
 		int fsright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object fs = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+
     String dataSection = ".data\n";
     String textSection = ".text\n";
     String code = fs.toString();
@@ -2511,6 +2755,8 @@ class CUP$parser$actions {
     mipsCode.append(variables.toString());
     mipsCode.append(textSection);
     mipsCode.append(code);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("program",3, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }

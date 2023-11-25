@@ -1,6 +1,7 @@
 
-int#main(){
-    float#hola;
-    return#hola;
+int#main(int#mula, char#cute, float#hijo, bool#mulo, int#perra){
+    char#hola;
+    hola = 'x';
+    print<<hola;
 }
 

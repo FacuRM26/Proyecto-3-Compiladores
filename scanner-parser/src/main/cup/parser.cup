@@ -69,7 +69,9 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
 
     StringBuffer mipsCode = new StringBuffer(); // Para concatenar el código mips
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
-    int currentTemp = 1; // Para generar los temporales
+    int currentTemp = 0; // Para generar los temporales
+    int floatTemp = 0; // Para generar los temporales de float
+
     int structs = 0; // Para generar las etiquetas de las estructuras de control
     int lastParam = 3; // Para saber el último parámetro de una función
 
@@ -141,15 +143,86 @@ aritmeticOp ::= PLUS:plus {: RESULT = plus; :}
 
 operand ::= literal:n
 {:
-    String codigo = "t"+currentTemp++ +" = "+n.toString().split(":")[0];
+   
+    String tipo = n.toString().split(":")[1];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+     switch(tipo){
+        case "int":
+            movInstr = "li ";    
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "float":
+            movInstr = "li.s ";
+            lastRegister = "$f" + floatTemp++;
+            break;
+
+        case "bool":
+            movInstr = "li ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "char":
+            movInstr = "li ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "string":
+            movInstr = "la ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        default:
+            break;
+    }
+
+    codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
     RESULT = codigo;
 
 :}
 
 | IDENTIFIER:id
 {:
-    //code 3d
-    String codigo = "t"+currentTemp++ +" = "+id.toString();
+
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+     switch(tipo){
+        case "int":
+            movInstr = "lw ";    
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "float":
+            movInstr = "l.s ";
+            lastRegister = "$f" + floatTemp++;
+            break;
+
+        case "bool":
+            movInstr = "lw ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "char":
+            movInstr = "lb ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "string":
+            movInstr = "la ";
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        default:
+            break;
+    }
+
+    codigo = movInstr + lastRegister+", "+ id.toString() + ":" + lastRegister + ":" + tipo;
     RESULT = codigo;
 
 :}
@@ -570,7 +643,16 @@ switch_struct ::= SWITCH LPAREN expression RPAREN BLOCKSTART default_statement B
 
 varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
 {:
-    //code mips
+
+    //Agregar a la tabla de simbolos
+    String[] symbol = new String[3];
+    symbol[0] = "Variable";
+    symbol[1] = idVar.toString();
+    symbol[2] = t.toString();
+    tablasDeSimbolos.get(currentHash).add(symbol);
+
+
+    //Codigo MIPS
     switch(t.toString()){
         case "int":
             variables.append(idVar.toString()+": .word 0\n");
@@ -590,8 +672,8 @@ varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
         default :
             break;
     }
-    RESULT= t.toString()+" "+idVar.toString();
 
+    RESULT= t.toString()+" "+idVar.toString();
 
 :};
 
@@ -599,19 +681,43 @@ decl ::= varIdentifier ENDLINE{:
     RESULT="";
 :};
 
-assignment ::= IDENTIFIER:id ASSIGN expression:e1 ENDLINE
+assignment ::= IDENTIFIER:id ASSIGN expression:e ENDLINE
 {:
 
-    //code 3d
-    String code = e1.toString()+"\n"+id.toString()+" = ";
+    String exprCode = e.toString().split(":")[0];
+    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2];
 
+    String movInstr = "";
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "sw ";    
+            break;
+        case "float":
+            movInstr = "s.s ";
+            break;
+        case "bool":
+            movInstr = "sw ";
+            break;
+        case "char":
+            movInstr = "sb ";
+            break;
+        case "string": //revisar strings
+            movInstr = "sb ";
+            break;
+        default:
+            break;
+    }
+
+    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString();
     RESULT = code;
 
 :};
 
 decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e1 ENDLINE
 {:
-    //code mips
+ 
     String code = vi.toString() + "\n" + e1.toString() + "\n" ;
     switch(vi.toString().split(" ")[0]){
         case "int":
@@ -644,12 +750,40 @@ readData ::= READ READSYMBOL IDENTIFIER:id ENDLINE
 
 :};
 
-printData ::= PRINT PRINTSYMBOL expression:e1 ENDLINE
+printData ::= PRINT PRINTSYMBOL expression:e ENDLINE
 {:
-    //code 3d
-    String codigo = e1.toString() + "\n" + "PRINT t"+(currentTemp-1)+"\n";
-    RESULT = codigo;
 
+    String exprCode = e.toString().split(":")[0];
+    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2];
+    String code = "";
+
+    switch(tipoExpr){
+        case "int":
+            code = "li $v0, 1\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "float":
+            code = "li $v0, 2\n" + "mov.s $f12, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "bool":
+            code = "li $v0, 1\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "char":
+            code = "li $v0, 11\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        case "string":
+            code = "li $v0, 4\n" + "move $a0, " + lastRegister + "\n" + "syscall";
+            break;
+
+        default:
+            break;
+    }
+
+    RESULT = exprCode + "\n" + code;
 :};
 
 
@@ -668,7 +802,7 @@ sendParameters ::= expression:e
             movInstr = "li";    
             break;
         case "float":
-            movInstr = "l.s";
+            movInstr = "li.s";
             break;
         case "bool":
             movInstr = "li";
@@ -722,7 +856,7 @@ sendParameters ::= expression:e
             movInstr = "li";    
             break;
         case "float":
-            movInstr = "l.s";
+            movInstr = "li.s";
             break;
         case "bool":
             movInstr = "li";
@@ -795,7 +929,7 @@ return_statement ::= RETURN SEPARATOR expression:e ENDLINE
    
     String codigo = "  jr $ra";
     RESULT = codigo;
-    
+
 :}
 
 ;
@@ -836,26 +970,37 @@ statements ::= statements:sts statement:st
 
 parameter ::= type:t SEPARATOR IDENTIFIER:idParam
 {:
-    String code = "data_"+t.toString()+" "+idParam.toString()+"\n";
-    RESULT = code;
+     
+    switch(t.toString()){
+        case "int":
+            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            break;
+        case "float":
+            variables.append(currentHash + "_" + idParam.toString()+": .float 0.0\n");
+            break;
+        case "bool":
+            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            break;
+        case "char":
+            variables.append(currentHash + "_" + idParam.toString()+": .byte 0\n");
+            break;
+        case "string":
+            variables.append(currentHash + "_" + idParam.toString()+": .asciiz \"\"\n");
+            break;
+        default :
+            break;
+    }
+  
 :};
 
-parameters ::= parameter:p
-{:
-    RESULT = p;
-
-:};
-parameters ::= parameters:ps COMMA parameter:p
-{:
-    RESULT = ps.toString() + p.toString();
-:};
+parameters ::= parameter;
+parameters ::= parameters COMMA parameter;
 
 
 /** FUNCTIONS **/
 
 functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
 {:
-
 
     //  Definir el tipo de tabla
         String tipoTabla = "main";
@@ -877,25 +1022,25 @@ functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
 
        //Codigo MIPS
         currentTemp = 1;
-        String codigo = "\nbegin_func_"+idFunc.toString()+":\n";
+        String codigo = idFunc.toString()+":\n";
         RESULT = codigo;
 
 
 :};
 
-function ::= functionIdentifier:fi LPAREN parameters:ps RPAREN BLOCKSTART statements:st BLOCKEND
+function ::= functionIdentifier:fi LPAREN parameters RPAREN BLOCKSTART statements:st BLOCKEND
 {:
 
-    //Codigo MIPS
-    String cierreFuncion = fi.toString().replace("begin", "end");
-    String code = fi.toString() + ps.toString()+ st.toString() + cierreFuncion;
+
+    String cierreFuncion = "\nend_"+fi.toString();
+    String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
 :}
 | functionIdentifier:fi LPAREN  RPAREN BLOCKSTART statements:st BLOCKEND
 {:
-    //Codigo MIPS
-    String cierreFuncion = fi.toString().replace("begin", "end");
+   
+    String cierreFuncion = "\nend_"+fi.toString();
     String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
@@ -907,37 +1052,47 @@ functions ::= errors;
 
 
 globalVariable ::=  decl:decl
-{: RESULT = decl; :}
+{: 
+    RESULT = decl; 
+    
+:}
 | decl_and_assignment:dcla
-{: RESULT = dcla; :};
+{: 
+
+    RESULT = dcla; 
+
+:};
 
 globalVariables ::= globalVariable: gv
-{: RESULT = gv; :};
+{: 
 
-globalVariables ::= globalVariables:gvs globalVariable:gv
-{: RESULT = gvs.toString()+gv.toString(); :};
+    RESULT = gv; 
+    
+:}
+| globalVariables:gvs globalVariable:gv
+{: 
+    
+    RESULT = gvs.toString()+gv.toString(); 
+
+:};
 
 
 /** PUNTO DE ENTRADA **/
-program ::= globalVariables:gvs
+program ::= globalVariables
 {:
+
     String dataSection = ".data\n";
+    String textSection = ".text\n";
     mipsCode.append(dataSection);
     mipsCode.append(variables.toString());
+    mipsCode.append(textSection);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
 :}
+
 | functions:fs
 {:
-    String dataSection = ".data\n";
-    String textSection = ".text\n";
-    String code = fs.toString();
-    mipsCode.append(dataSection);
-    mipsCode.append(variables.toString());
-    mipsCode.append(textSection);
-    mipsCode.append(code);
-:};
 
-program ::= globalVariables:gvs functions:fs
-{:
     String dataSection = ".data\n";
     String textSection = ".text\n";
     String code = fs.toString();
@@ -945,6 +1100,23 @@ program ::= globalVariables:gvs functions:fs
     mipsCode.append(variables.toString());
     mipsCode.append(textSection);
     mipsCode.append(code);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
+
+:}
+
+| globalVariables:gvs functions:fs
+{:
+
+    String dataSection = ".data\n";
+    String textSection = ".text\n";
+    String code = fs.toString();
+    mipsCode.append(dataSection);
+    mipsCode.append(variables.toString());
+    mipsCode.append(textSection);
+    mipsCode.append(code);
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+
 :};
 
 error_recovery ::= ERROR_RECOVERY;
