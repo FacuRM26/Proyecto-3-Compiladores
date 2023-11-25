@@ -699,8 +699,6 @@ public StringBuffer getmipsCode() { // Para obtener el código intermedio
 
 
 
-
-
 /** Cup generated class to encapsulate user supplied action code.*/
 @SuppressWarnings({"rawtypes", "unchecked", "unused"})
 class CUP$parser$actions {
@@ -1799,7 +1797,7 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 		
-    RESULT="AAAA";
+    RESULT="";
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("decl",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2315,7 +2313,7 @@ class CUP$parser$actions {
         tabla.add(tipo);
         tablasDeSimbolos.put(currentHash, tabla);
 
-        //code 3d
+       //Codigo MIPS
         currentTemp = 1;
         String codigo = "\nbegin_func_"+idFunc.toString()+":\n";
         RESULT = codigo;
@@ -2340,8 +2338,10 @@ class CUP$parser$actions {
 		int stright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object st = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //code 3d
-    String code = fi.toString() + ps.toString()+ st.toString();
+
+    //Codigo MIPS
+    String cierreFuncion = fi.toString().replace("begin", "end");
+    String code = fi.toString() + ps.toString()+ st.toString() + cierreFuncion;
     RESULT = code;
 
 
@@ -2360,8 +2360,9 @@ class CUP$parser$actions {
 		int stright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object st = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-    //code 3d
-    String code = fi.toString() + st.toString();
+    //Codigo MIPS
+    String cierreFuncion = fi.toString().replace("begin", "end");
+    String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
 
@@ -2391,7 +2392,7 @@ class CUP$parser$actions {
 		int fleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int fright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object f = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = fs.toString()+f.toString(); 
+		 RESULT = fs.toString() + f.toString(); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("functions",2, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

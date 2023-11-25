@@ -22,8 +22,9 @@ public class App
         Lexer lexer = new Lexer(reader);
         parser p = new parser(lexer);
         p.parse();
-        //Escribir en archivo de codigo intermedio
-       //MipsCode(p.getmipsCode());
+
+        //Escribir en archivo de codigo MIPS
+        MipsCode(p.getmipsCode());
     }
 
     public static void MipsCode(StringBuffer mipsCode) {

@@ -71,13 +71,12 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
     int currentTemp = 1; // Para generar los temporales
     int structs = 0; // Para generar las etiquetas de las estructuras de control
+    int lastParam = 3; // Para saber el último parámetro de una función
 
 
 public StringBuffer getmipsCode() { // Para obtener el código intermedio
     return  mipsCode;
 }
-
-
 
 
 :};
@@ -597,7 +596,7 @@ varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
 :};
 
 decl ::= varIdentifier ENDLINE{:
-    RESULT="AAAA";
+    RESULT="";
 :};
 
 assignment ::= IDENTIFIER:id ASSIGN expression:e1 ENDLINE
@@ -657,38 +656,123 @@ printData ::= PRINT PRINTSYMBOL expression:e1 ENDLINE
 sendParameters ::= expression:e
 {:
 
-    //code 3d
-    String codigo = e.toString()+"\nparam "+ "t"+(currentTemp-1)+"\n"+"1";
-    RESULT = codigo;
+    String tipoExpr = e.toString().split(":")[1];
+    String lastRegister = e.toString().split(":")[0];
 
+    String movInstr = "";
+    String code = "";
+
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "li";    
+            break;
+        case "float":
+            movInstr = "l.s";
+            break;
+        case "bool":
+            movInstr = "li";
+            break;
+        case "char":
+            movInstr = "lb";
+            break;
+        case "string":
+            movInstr = "la";
+            break;
+        default:
+            break;
+    } 
+
+    switch(lastParam) {
+        case 1:
+            code = movInstr + " $a2, "+ lastRegister;
+            lastParam = 2;
+            break;
+        case 2:
+            code = movInstr + " $a3, "+ lastRegister;
+            lastParam = 3;
+            break;
+        case 3:
+            code = movInstr +" $a0, "+ lastRegister;
+            lastParam = 0;
+            break;
+        case 0:
+            code = movInstr + " $a1, "+ lastRegister;
+            lastParam = 1;
+            break;
+        default:
+            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
+    }
+
+    RESULT = code;
 :}
 
 | sendParameters:sp COMMA expression:e
 {:
-    //code 3d
-    String cantParameters = sp.toString().split("\n")[sp.toString().split("\n").length-1];
-    String sp1 = sp.toString().substring(0, sp.toString().lastIndexOf("\n"));
 
-    String codigo = sp1.toString() + "\n" + e.toString()+"\nparam "+ "t"+(currentTemp-1)+"\n"+(Integer.parseInt(cantParameters)+1);
-    RESULT = codigo;
+    String tipoExpr = e.toString().split(":")[1];
+    String lastRegister = e.toString().split(":")[0];
+
+    String movInstr = "";
+    String code = "";
+
+
+    switch(tipoExpr){
+        case "int":
+            movInstr = "li";    
+            break;
+        case "float":
+            movInstr = "l.s";
+            break;
+        case "bool":
+            movInstr = "li";
+            break;
+        case "char":
+            movInstr = "lb";
+            break;
+        case "string":
+            movInstr = "la";
+            break;
+        default:
+            break;
+    } 
+
+    switch(lastParam) {
+        case 1:
+            code = movInstr + " $a2, "+ lastRegister;
+            lastParam = 2;
+            break;
+        case 2:
+            code = movInstr + " $a3, "+ lastRegister;
+            lastParam = 3;
+            break;
+        case 3:
+            code = movInstr +" $a0, "+ lastRegister;
+            lastParam = 0;
+            break;
+        case 0:
+            code = movInstr + " $a1, "+ lastRegister;
+            lastParam = 1;
+            break;
+        default:
+            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
+    }
+
+    RESULT = sp.toString() + "\n" + code;
 
 :};
 
 callFunction ::= IDENTIFIER:id LPAREN sendParameters:sp  RPAREN
 {:
 
-    //code 3d
-    String cantParameters = sp.toString().split("\n")[sp.toString().split("\n").length-1];
-    String sp1 = sp.toString().substring(0, sp.toString().lastIndexOf("\n"));
-
-    String codigo = sp1.toString() + "\nt"+(currentTemp++)+ " = call "+id.toString()+", "+cantParameters;
+    String codigo = sp.toString() + "jal "+id.toString();
     RESULT = codigo;
 
 :};
 
 callFunction ::= IDENTIFIER:id LPAREN RPAREN
 {:
-    String codigo = "t"+currentTemp++ +" call "+id.toString()+", 0";
+    String codigo = "jal "+id.toString();
     RESULT = codigo;
 
 :};
@@ -696,21 +780,22 @@ callFunction ::= IDENTIFIER:id LPAREN RPAREN
 
 callFunction_statement ::= callFunction:cf ENDLINE
 {:
-        //code 3d
         RESULT = cf;
 :};
 
 return_statement ::= RETURN SEPARATOR expression:e ENDLINE
 {:
-    //code 3d
-    String codigo = e.toString()+"\n"+"return t"+(currentTemp-1);
+
+    String codigo = e.toString() + "\n" + "  jr $ra";
     RESULT = codigo;
+
 :}
 | RETURN ENDLINE
 {:
-    //code 3d
-    String codigo = "return";
+   
+    String codigo = "  jr $ra";
     RESULT = codigo;
+    
 :}
 
 ;
@@ -790,7 +875,7 @@ functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
         tabla.add(tipo);
         tablasDeSimbolos.put(currentHash, tabla);
 
-        //code 3d
+       //Codigo MIPS
         currentTemp = 1;
         String codigo = "\nbegin_func_"+idFunc.toString()+":\n";
         RESULT = codigo;
@@ -800,21 +885,24 @@ functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
 
 function ::= functionIdentifier:fi LPAREN parameters:ps RPAREN BLOCKSTART statements:st BLOCKEND
 {:
-    //code 3d
-    String code = fi.toString() + ps.toString()+ st.toString();
+
+    //Codigo MIPS
+    String cierreFuncion = fi.toString().replace("begin", "end");
+    String code = fi.toString() + ps.toString()+ st.toString() + cierreFuncion;
     RESULT = code;
 
 :}
 | functionIdentifier:fi LPAREN  RPAREN BLOCKSTART statements:st BLOCKEND
 {:
-    //code 3d
-    String code = fi.toString() + st.toString();
+    //Codigo MIPS
+    String cierreFuncion = fi.toString().replace("begin", "end");
+    String code = fi.toString() + st.toString() + cierreFuncion;
     RESULT = code;
 
 :};
 
 functions ::= function: f {: RESULT = f; :};
-functions ::= functions:fs function:f {: RESULT = fs.toString()+f.toString(); :};
+functions ::= functions:fs function:f {: RESULT = fs.toString() + f.toString(); :};
 functions ::= errors;
 
 
