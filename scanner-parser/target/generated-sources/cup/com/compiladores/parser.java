@@ -1156,10 +1156,29 @@ class CUP$parser$actions {
 		int nright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object n = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-    //cod 3d
-    String code = "t"+currentTemp++ + " = -"+n.toString().split(":")[0];
-    RESULT = code;
 
+    String tipo = n.toString().split(":")[1];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+     switch(tipo){
+        case "int":
+            movInstr = "li ";    
+            lastRegister = "$t" + currentTemp++;
+            break;
+
+        case "float":
+            movInstr = "li.s ";
+            lastRegister = "$f" + floatTemp++;
+            break;
+
+        default:
+            break;
+    }
+
+    codigo = movInstr + lastRegister+", -"+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+    RESULT = codigo;
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("aritmeticExpression",24, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -1173,13 +1192,31 @@ class CUP$parser$actions {
 		int idright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object id = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
-     //cod 3d
-    String tempId= "t"+currentTemp++;
-    String tempPP1= "t"+currentTemp++;
-    String tempPP2= "t"+currentTemp++;
-    String codigo = tempId +" = "+ id + "\n" + tempPP1 +" = 1"+"\n"+tempPP2 +" = "+tempId+" + "+tempPP1+"\n"+id +" = "+tempPP2;
-    RESULT = codigo;
 
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+    switch(tipo){
+        case "int":
+            movInstr = "lw ";    
+            lastRegister = "$t" + currentTemp++;
+            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", 1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            break;
+    
+        case "float":
+            String moveToRegister = "li.s $f" + floatTemp++ + ", 1.0\n" ;
+            movInstr = "l.s ";
+            lastRegister = "$f" + floatTemp++;
+            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            break;
+    
+        default:
+            break;
+    }
+
+    RESULT = codigo;                
 
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("aritmeticExpression",24, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -1195,12 +1232,30 @@ class CUP$parser$actions {
 		Object id = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
 
-    //cod 3d
-    String tempId= "t"+currentTemp++;
-    String tempPP1= "t"+currentTemp++;
-    String tempPP2= "t"+currentTemp++;
-    String codigo = tempId +" = "+ id + "\n" + tempPP1 +" = 1"+"\n"+tempPP2 +" = "+tempId+" - "+tempPP1+"\n"+id +" = "+tempPP2;
-    RESULT = codigo;
+   String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+    switch(tipo){
+        case "int":
+            movInstr = "lw ";    
+            lastRegister = "$t" + currentTemp++;
+            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", -1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            break;
+    
+        case "float":
+            String moveToRegister = "li.s $f" + floatTemp++ + ", -1.0\n" ;
+            movInstr = "l.s ";
+            lastRegister = "$f" + floatTemp++;
+            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            break;
+    
+        default:
+            break;
+    }
+
+    RESULT = codigo;                
 
 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("aritmeticExpression",24, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
