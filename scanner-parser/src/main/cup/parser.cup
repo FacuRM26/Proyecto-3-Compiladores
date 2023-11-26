@@ -636,7 +636,7 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n");
     String operacion =e1.toString().split(":")[0];
     String operacion2 = operacion.toString().split("t")[1];
-    String operacionLogica1 = e1.toString().split(":")[0]+ "\nlw $t" +operacion2.split(",")[0]+", "+ id.toString(); 
+    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString(); 
     variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
     String operacionLogica2 = e2.toString().split(":")[0];
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word"+ temporale3.split(":")[0].split(",")[1]+"\n");
@@ -661,7 +661,7 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
 | FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LPAREN aritmeticExpression:e1 COMMA
                      aritmeticExpression:e2 RPAREN BLOCKSTART statements:st BLOCKEND
 {:
-        String idFunc = currentHash;
+    String idFunc = currentHash;
 
     String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
     String [] lineas2 = e2.toString().split("\n");
@@ -671,93 +671,67 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     String temporale2 = lineas2[lineas2.length - 1];
     temporale2 = temporale2.split(" = ")[0]; // Obtiene el último temporal generado
 
-
-    //moverme a antes de la expresion logica
-    String etiquetaIni= idFunc+"_for_"+ ++structs+":\ndata_Int ini_" +idFunc+"_for_"+ structs+ "\n";
-
-    String operacionLogica = e1.toString();
-
-    String etiquetaIni2 = "\nini_" +idFunc+"_for_"+ structs + " = " + temporale1;
-
-    String etiquetaFin= "\ndata_Int fin_" +idFunc+"_for_"+ structs+ "\n";
-
-    String operacionLogica2 = e2.toString();
-
-    String etiquetaFin2 = "\nfin_" +idFunc+"_for_"+ structs + " = " + temporale2;
-
-    String etiquetaStep= "\ndata_Int step_" +idFunc+"_for_"+ structs+ "\nt" + currentTemp++ + " = 1";
-
-
-    String etiquetaStep2 = "\nstep_" +idFunc+"_for_"+ structs + " = " + "t" + (currentTemp-1);
-
-    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n"
-    + "t"+currentTemp++ +" = ini_" +idFunc+"_for_"+ structs +"\nt"+ currentTemp++ +" = fin_" +idFunc+"_for_"+ structs +"\nt" + currentTemp++
-    + " = t"+(currentTemp-3)+" < t"+(currentTemp-2);
-    String saltoAfirmativo = "\nif t"+(currentTemp-1) + " goto "+ idFunc + "_for_"+ structs + "_bloque";
-    String saltoNegativo = "\ngoto "+ idFunc + "_for_"+ structs + "_bloque_end";
-    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nt" + currentTemp++ + " ="+ "step_" +idFunc+"_for_"+ structs + "\nt"
-    + currentTemp++ + "= ini_" +idFunc+"_for_"+ structs + "\nt" + currentTemp++ + " = t"+(currentTemp-2)+" + t"+(currentTemp-3)
-    +"\nini_" +idFunc+"_for_"+ structs + " = t"+(currentTemp-1)+ "\ngoto "+ idFunc + "_for_"+ structs + "_condition";
+    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n";
+    variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n");
+    String operacion =e1.toString().split(":")[0];
+    String operacion2 = operacion.toString().split("t")[1];
+    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString(); 
+    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
+    String operacionLogica2 = e2.toString().split(":")[0];
+    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
+    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+currentTemp++ +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ currentTemp++ 
+    +" , fin_" +idFunc+"_for_"+ structs;
+    String saltoAfirmativo = "\nblt $t"+(currentTemp-2) + " , $t"+(currentTemp-1) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
-
-    //escribir todo lo de statements
     String statements = st.toString();
+    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
 
-    String etiquetaBloqueEnd = "\ngoto "+ idFunc + "_for_"+ structs + "_inc\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
+    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + currentTemp++ + " , "+ "step_" +idFunc+"_for_"+ structs + 
+    "\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_for_"+ structs + 
+    "\nadd $t"+(currentTemp-1)+", $t"+(currentTemp-1)+" , $t"+(currentTemp-2)+
+    "\nsw $t"+(currentTemp-1) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp-1) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
-    RESULT = etiquetaIni + operacionLogica + etiquetaIni2 + etiquetaFin + operacionLogica2 + etiquetaFin2 + etiquetaStep  + etiquetaStep2 +
-    operacionLogica4 +saltoAfirmativo + saltoNegativo +etiqueteInc+ etiquetaBloque + statements + etiquetaBloqueEnd;
-
-
-
-
+    RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 :}
 
 | FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LPAREN aritmeticExpression:e1 RPAREN BLOCKSTART statements:st BLOCKEND
 {:
-            String idFunc = currentHash;
+    String idFunc = currentHash;
 
     String[] lineas2 = e1.toString().split("\n");  // Divide la cadena en líneas
-
-
 
     String temporale2 = lineas2[lineas2.length - 1];
     temporale2 = temporale2.split(" = ")[0]; // Obtiene el último temporal generado
 
 
     //moverme a antes de la expresion logica
-    String etiquetaIni= idFunc+"_for_"+ ++structs+":\ndata_Int ini_" +idFunc+"_for_"+ structs+ "\nt" + currentTemp++ + " = 1";
-
-    String etiquetaIni2 = "\nini_" +idFunc+"_for_"+ structs + " = " + "t" + (currentTemp-1);
+    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n";
+    variables.append("ini_" +idFunc+"_for_"+ structs +": .word 0"+"\n");
 
     String etiquetaFin= "\ndata_Int fin_" +idFunc+"_for_"+ structs+ "\n";
 
-    String operacionLogica2 = e1.toString();
 
-    String etiquetaFin2 = "\nfin_" +idFunc+"_for_"+ structs + " = " + temporale2;
-
-    String etiquetaStep= "\ndata_Int step_" +idFunc+"_for_"+ structs+ "\nt" + currentTemp++ + " = 1";
-
-
-    String etiquetaStep2 = "\nstep_" +idFunc+"_for_"+ structs + " = " + "t" + (currentTemp-1);
-
-    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n"
-    + "t"+currentTemp++ +" = ini_" +idFunc+"_for_"+ structs +"\nt"+ currentTemp++ +" = fin_" +idFunc+"_for_"+ structs +"\nt" + currentTemp++
-    + " = t"+(currentTemp-3)+" < t"+(currentTemp-2);
-    String saltoAfirmativo = "\nif t"+(currentTemp-1) + " goto "+ idFunc + "_for_"+ structs + "_bloque";
-    String saltoNegativo = "\ngoto "+ idFunc + "_for_"+ structs + "_bloque_end";
-    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nt" + currentTemp++ + " ="+ "step_" +idFunc+"_for_"+ structs + "\nt"
-    + currentTemp++ + "= ini_" +idFunc+"_for_"+ structs + "\nt" + currentTemp++ + " = t"+(currentTemp-2)+" + t"+(currentTemp-3)
-    +"\nini_" +idFunc+"_for_"+ structs + " = t"+(currentTemp-1)+ "\ngoto "+ idFunc + "_for_"+ structs + "_condition";
+    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
+    String operacionLogica2 = e1.toString().split(":")[0];
+    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
+    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+currentTemp++ +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ currentTemp++ 
+    +" , fin_" +idFunc+"_for_"+ structs;
+    String saltoAfirmativo = "\nblt $t"+(currentTemp-2) + " , $t"+(currentTemp-1) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
-
-    //escribir todo lo de statements
     String statements = st.toString();
+    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
 
-     String etiquetaBloqueEnd = "\ngoto "+ idFunc + "_for_"+ structs + "_inc\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
+    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + currentTemp++ + " , "+ "step_" +idFunc+"_for_"+ structs + 
+    "\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_for_"+ structs + 
+    "\nadd $t"+(currentTemp-1)+", $t"+(currentTemp-1)+" , $t"+(currentTemp-2)+
+    "\nsw $t"+(currentTemp-1) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp-1) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
-    RESULT = etiquetaIni  + etiquetaIni2 + etiquetaFin + operacionLogica2 + etiquetaFin2 + etiquetaStep  + etiquetaStep2 +
-    operacionLogica4 +saltoAfirmativo + saltoNegativo +etiqueteInc+ etiquetaBloque + statements + etiquetaBloqueEnd;
+
+    RESULT = etiquetaIni + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 
 :};
 
