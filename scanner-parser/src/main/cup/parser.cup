@@ -515,7 +515,10 @@ if (matcher.find()) {
     }
 }
 
-    String codigo = operacionLogica1.trim() +"\n"+operacionLogica2+"\n"+ comparador + registro1 + ", " + registro2 + ", " + idFunc + "_if_"+ (structs) + "_bloque\nb "+idFunc + "_if_"+ (structs) + "_end"+ "\n" + idFunc + "_if_"+ (structs) + "_bloque: \n"+ st.toString() + "\n" + idFunc + "_if_"+ (structs) + "_end: \n";
+    String codigo = operacionLogica1.trim() +"\n"+operacionLogica2+"\n"+ comparador + registro1 + ", " + registro2 + ", " + idFunc + "_if_"+ (structs) + "_bloque\nb " 
+    +idFunc + "_if_"+ (structs) + "_bloque_end"+ "\n" + idFunc + "_if_"+ (structs) + "_bloque: \n"+ st.toString() + "\nb " 
+    +idFunc + "_if_"+ (structs) + "_end\n" + idFunc + "_if_"+ structs + "_bloque_end:"+
+    "\n" + idFunc + "_if_"+ (structs) + "_end:";
     
 
     RESULT = codigo;
@@ -533,12 +536,16 @@ if_else_struct ::= if_struct:if_strc ELSE BLOCKSTART statements:st BLOCKEND
     //insertar codigo del else antes de la ultima linea de ifCode
     String[] lineas = ifCode.split("\n");  // Divide la cadena en líneas
     String etiquetaEndIf = lineas[lineas.length - 1];
+
     String etiquetaElse = etiquetaEndIf.replace("end", "else")+"\n";
     String etiquetaElseEnd = etiquetaElse.replace(":", "_end:");
-    ifCode = ifCode.substring(0, ifCode.lastIndexOf("\n"));
 
+    ifCode = ifCode.substring(0, ifCode.lastIndexOf("\n")); // Elimina la última línea
+ 
     String codigo = ifCode + "\n" + etiquetaElse + st.toString() + "\n" + etiquetaElseEnd+ etiquetaEndIf;
-
+        for (int i = 0; i < lineas.length; i++) {
+        System.out.println("linea "+i +": "+lineas[i]);
+    }
     RESULT = codigo;
 
 :};
