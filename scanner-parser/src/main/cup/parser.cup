@@ -513,7 +513,7 @@ if (matcher.find()) {
     } else if (operador.equals("!=")) {
         comparador = "bne ";
     }
-}
+    }
 
     String codigo = operacionLogica1.trim() +"\n"+operacionLogica2+"\n"+ comparador + registro1 + ", " + registro2 + ", " + idFunc + "_if_"+ (structs) + "_bloque\nb " 
     +idFunc + "_if_"+ (structs) + "_bloque_end"+ "\n" + idFunc + "_if_"+ (structs) + "_bloque: \n"+ st.toString() + "\nb " 
@@ -529,7 +529,7 @@ if (matcher.find()) {
 if_else_struct ::= if_struct:if_strc ELSE BLOCKSTART statements:st BLOCKEND
 {:
 
-    //cod 3d
+    //cod mips
     String idFunc = currentHash;
     String ifCode = if_strc.toString();
 
@@ -553,26 +553,47 @@ if_else_struct ::= if_struct:if_strc ELSE BLOCKSTART statements:st BLOCKEND
 while_struct ::= WHILE LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:st BLOCKEND
 {:
     String idFunc = currentHash;
+
     String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
     String temporale1 = lineas[lineas.length - 1];
-    temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-
+    String temporale2 = lineas[1]; // Obtiene el último temporal generado
+    String operacionLogica1 = temporale1.split(":")[0].split("=")[1].trim() ; // Obtiene el último temporal generado
+    String operacionLogica2 = temporale2.split(":")[0].toString(); // Obtiene el último temporal generado
+    String registro1 = temporale1.split(":")[1]; // Obtiene el último temporal generado
+    String registro2 = temporale2.split(":")[1]; // Obtiene el último temporal generado
+    String operador="";
+    String comparador = "";
 
     //moverme a antes de la expresion logica
     String etiquetaPrincipal = idFunc+"_while_"+ ++structs+":";
     String etiquetaCondicion = "\n" + idFunc + "_while_"+ structs + "_condition:\n" ;
-    String operacionLogica = e1.toString();
-    String saltoAfirmativo = "\nif " + temporale1 + " goto "+ idFunc + "_while_"+ structs + "_bloque";
-    String saltoNegativo = "\ngoto "+ idFunc + "_while_"+ structs + "_bloque_end";
+
+
+    Pattern patron = Pattern.compile("==|<|>|<=|>=|!=");
+    Matcher matcher = patron.matcher(temporale1.split(":")[2].toString());
+    if (matcher.find()) {
+        operador = matcher.group();
+    if (operador.equals("==")) {
+        comparador = "beq ";
+    } else if (operador.equals("<")) {
+        comparador = "blt ";
+    } else if (operador.equals(">")) {
+        comparador = "bgt ";
+    } else if (operador.equals("<=")) {
+        comparador = "ble ";
+    } else if (operador.equals(">=")) {
+        comparador = "bge ";
+    } else if (operador.equals("!=")) {
+        comparador = "bne ";
+    }
+    }
+    String saltoAfirmativo =comparador + registro1 + ", " + registro2 + ", " + idFunc + "_while_"+ (structs) + "_bloque";
+    String saltoNegativo = "\nb " + idFunc + "_while_"+ (structs) + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_while_"+ structs + "_bloque:\n";
-
-    //escribir todo lo de statements
     String statements = st.toString();
-
-    String etiquetaBloqueEnd = "\ngoto "+ idFunc + "_while_"+ structs + "_condition\n"+ idFunc +
+    String etiquetaBloqueEnd = "\nb "+ idFunc + "_while_"+ structs + "_condition\n"+ idFunc +
     "_while_"+ structs + "_bloque_end:" + "\n" + idFunc + "_while_"+ structs + "_end:";
-
-    RESULT = etiquetaPrincipal + etiquetaCondicion + operacionLogica + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetaBloqueEnd;
+    RESULT = etiquetaPrincipal + etiquetaCondicion + operacionLogica1 +"\n"+ operacionLogica2 + "\n" + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetaBloqueEnd;
 
 :};
 
