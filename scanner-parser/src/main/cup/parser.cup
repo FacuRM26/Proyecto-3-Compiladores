@@ -371,8 +371,20 @@ aritmeticExpression ::= operand:n
                 String temp = "$t" + currentTemp++;  
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \nli " +temp+ ",0 \n"+  opInstr + lastRegister + "," + e2.toString().split(":")[1] +"\nmfhi "+ temp+ ":" + temp + ":" + tipo;
             } else if (operand.equals("^")) {
-                opInstr  = "pow ";    
-                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]  + "\n" + opInstr + lastRegister + ", " + lastRegister + "," + e2.toString().split(":")[1] + ":" + lastRegister + ":" + tipo;
+                String idFunc = currentHash;
+                variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n");
+                variables.append("res_" +idFunc+"_pow_"+ structs +": .word "+ 0 +"\n");
+                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":\n";
+                String res= "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlw $t"+currentTemp++ + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                String multiplicacion = "mul "+ lastRegister + ", " + lastRegister + ", " + "$t"+(currentTemp-1)+ "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                
+                String add="\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+(currentTemp-1) + ", $t"+(currentTemp-1) + ", 1\n" 
+                + "sw $t"+(currentTemp-1) + ", ini_" +idFunc+"_pow_"+ structs + "\n";
+                String saltoAfirmativo = "blt $t"+(currentTemp-1) + " , $t"+(currentTemp-2) + " , "+ idFunc + "_pow_"+ structs;
+                String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end";
+                String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:";
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + res+ etiquetaIni +"\n" + multiplicacion + add + saltoAfirmativo + saltoNegativo + etiquetaEnd+ ":"+ 
+                lastRegister + ":" + tipo;
 
             }
             break;
@@ -407,8 +419,21 @@ aritmeticExpression ::= operand:n
             }
             else if(operand.equals("^"))
             {
-                opInstr  = "pow.s ";    
-                codigo = "";
+                String idFunc = currentHash;
+                variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n");
+                variables.append("res_" +idFunc+"_pow_"+ structs +": .float "+ 0.0 +"\n");
+                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":\n";
+                String res= "\nmov.s " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlwc1 $t"+currentTemp++ + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                String multiplicacion = "mul.s "+ lastRegister + ", " + lastRegister + ", " + "$t"+(currentTemp-1)+ "\nswc1 " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                String add="\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+(currentTemp-1) + ", $t"+(currentTemp-1) + ", 1\n" 
+                + "sw $t"+(currentTemp-1) + ", ini_" +idFunc+"_pow_"+ structs + "\n";
+                String saltoAfirmativo = "blt $t"+(currentTemp-1) + " , $t"+(currentTemp-2) + " , "+ idFunc + "_pow_"+ structs;
+                String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end";
+                String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:";
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + res+ etiquetaIni +"\n" + multiplicacion + add + 
+                saltoAfirmativo + saltoNegativo + etiquetaEnd+ ":"+ lastRegister + ":" + tipo;
+                
+                
             }
             break;
     }
