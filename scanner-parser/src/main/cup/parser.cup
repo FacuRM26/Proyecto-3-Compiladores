@@ -70,15 +70,48 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
 
     StringBuffer mipsCode = new StringBuffer(); // Para concatenar el código mips
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
-    int currentTemp = 0; // Para generar los temporales
+    int currentTemp = -1; // Para generar los temporales
     int floatTemp = 0; // Para generar los temporales de float
 
     int structs = 0; // Para generar las etiquetas de las estructuras de control
     int lastParam = 3; // Para saber el último parámetro de una función
+    int cantParams = 0; // Para saber la cantidad de parámetros de una función
 
 
 public StringBuffer getmipsCode() { // Para obtener el código intermedio
     return  mipsCode;
+}
+
+public int getCurrentTemp() { 
+    if (currentTemp == 10) {
+        currentTemp = 0;
+        return currentTemp;
+    }
+    else {
+       return currentTemp++;
+    }
+}
+public int getPreviousTemp(int previous) { 
+    if (currentTemp == 0) {
+        return 10-previous;
+    }
+    else {
+       return currentTemp-previous;
+    }
+}
+
+public int getFloatTemp() { 
+    if (floatTemp == 31) {
+        floatTemp = 0;
+        return floatTemp;
+    }
+    else if (floatTemp == 12) {
+        floatTemp = 13;
+        return floatTemp;
+    }
+    else {
+       return floatTemp++;
+    }
 }
 
 
@@ -154,27 +187,27 @@ operand ::= literal:n
      switch(tipo){
         case "int":
             movInstr = "li ";    
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "float":
             movInstr = "li.s ";
-            lastRegister = "$f" + floatTemp++;
+            lastRegister = "$f" + getFloatTemp();
             break;
 
         case "bool":
             movInstr = "li ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "char":
             movInstr = "li ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "string":
             movInstr = "la ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         default:
@@ -197,27 +230,27 @@ operand ::= literal:n
      switch(tipo){
         case "int":
             movInstr = "lw ";    
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "float":
             movInstr = "l.s ";
-            lastRegister = "$f" + floatTemp++;
+            lastRegister = "$f" + getFloatTemp();
             break;
 
         case "bool":
             movInstr = "lw ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "char":
             movInstr = "lb ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "string":
             movInstr = "la ";
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         default:
@@ -263,12 +296,12 @@ aritmeticExpression ::= operand:n
      switch(tipo){
         case "int":
             movInstr = "li ";    
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             break;
 
         case "float":
             movInstr = "li.s ";
-            lastRegister = "$f" + floatTemp++;
+            lastRegister = "$f" + getFloatTemp();
             break;
 
         default:
@@ -290,14 +323,14 @@ aritmeticExpression ::= operand:n
     switch(tipo){
         case "int":
             movInstr = "lw ";    
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", 1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
             break;
     
         case "float":
-            String moveToRegister = "li.s $f" + floatTemp++ + ", 1.0\n" ;
+            String moveToRegister = "li.s $f" + getFloatTemp() + ", 1.0\n" ;
             movInstr = "l.s ";
-            lastRegister = "$f" + floatTemp++;
+            lastRegister = "$f" + getFloatTemp();
             codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
             break;
     
@@ -320,14 +353,14 @@ aritmeticExpression ::= operand:n
     switch(tipo){
         case "int":
             movInstr = "lw ";    
-            lastRegister = "$t" + currentTemp++;
+            lastRegister = "$t" + getCurrentTemp();
             codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", -1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
             break;
     
         case "float":
-            String moveToRegister = "li.s $f" + floatTemp++ + ", -1.0\n" ;
+            String moveToRegister = "li.s $f" + getFloatTemp() + ", -1.0\n" ;
             movInstr = "l.s ";
-            lastRegister = "$f" + floatTemp++;
+            lastRegister = "$f" + getFloatTemp();
             codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
             break;
     
@@ -368,22 +401,23 @@ aritmeticExpression ::= operand:n
 
             } else if (operand.equals("%")) {
                 opInstr  = "div ";  
-                String temp = "$t" + currentTemp++;  
+                String temp = "$t" + getCurrentTemp();  
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \nli " +temp+ ",0 \n"+  opInstr + lastRegister + "," + e2.toString().split(":")[1] +"\nmfhi "+ temp+ ":" + temp + ":" + tipo;
             } else if (operand.equals("^")) {
                 String idFunc = currentHash;
                 variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n");
                 variables.append("res_" +idFunc+"_pow_"+ structs +": .word "+ 0 +"\n");
-                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":\n";
-                String res= "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlw $t"+currentTemp++ + ", res_" +idFunc+"_pow_"+ structs+ "\n";
-                String multiplicacion = "mul "+ lastRegister + ", " + lastRegister + ", " + "$t"+(currentTemp-1)+ "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
                 
-                String add="\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+(currentTemp-1) + ", $t"+(currentTemp-1) + ", 1\n" 
-                + "sw $t"+(currentTemp-1) + ", ini_" +idFunc+"_pow_"+ structs + "\n";
-                String saltoAfirmativo = "blt $t"+(currentTemp-1) + " , $t"+(currentTemp-2) + " , "+ idFunc + "_pow_"+ structs;
+                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":";
+                String res= "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlw $t"+getCurrentTemp() + ", res_" +idFunc+"_pow_"+ structs+ "\nsw $t"+getCurrentTemp() + ", ini_" +idFunc+"_pow_"+ structs+ "\n";
+                String iniCont= "\nli $t" + getPreviousTemp(1) + ", 1";
+                String multiplicacion = "sw $t"+getPreviousTemp(1) +  ", ini_" +idFunc+"_pow_"+ structs+ "\nmul "+ lastRegister + ", " + lastRegister + ", " + "$t"+(getPreviousTemp(2))+ "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                
+                String add="\nlw $t"+getPreviousTemp(1) + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+getPreviousTemp(1) + ", $t"+getPreviousTemp(1) + ", 1\n";
+                String saltoAfirmativo = "blt $t"+(getPreviousTemp(1)) + " , $t"+(getPreviousTemp(3)) + " , "+ idFunc + "_pow_"+ structs;
                 String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end";
                 String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:";
-                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + res+ etiquetaIni +"\n" + multiplicacion + add + saltoAfirmativo + saltoNegativo + etiquetaEnd+ ":"+ 
+                codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]+iniCont + res+ etiquetaIni +"\n" + multiplicacion + add + saltoAfirmativo + saltoNegativo + etiquetaEnd+ ":"+ 
                 lastRegister + ":" + tipo;
 
             }
@@ -413,7 +447,7 @@ aritmeticExpression ::= operand:n
             else if(operand.equals("%"))
             {
                 opInstr  = "div.s ";  
-                String temp = "$f" + floatTemp++;  
+                String temp = "$f" + getFloatTemp();  
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \n"+  opInstr +lastRegister + ", "+ lastRegister + "," + e2.toString().split(":")[1] +
                 "\nmflo "+ temp+ "\nmul.s " + temp + ", " + temp + ", " + e2.toString().split(":")[1] + "\nsub.s $f12 , " +lastRegister +"," +temp + ":" + "$f12:" + tipo;
             }
@@ -423,11 +457,11 @@ aritmeticExpression ::= operand:n
                 variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n");
                 variables.append("res_" +idFunc+"_pow_"+ structs +": .float "+ 0.0 +"\n");
                 String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":\n";
-                String res= "\nmov.s " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlwc1 $t"+currentTemp++ + ", res_" +idFunc+"_pow_"+ structs+ "\n";
-                String multiplicacion = "mul.s "+ lastRegister + ", " + lastRegister + ", " + "$t"+(currentTemp-1)+ "\nswc1 " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
-                String add="\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+(currentTemp-1) + ", $t"+(currentTemp-1) + ", 1\n" 
-                + "sw $t"+(currentTemp-1) + ", ini_" +idFunc+"_pow_"+ structs + "\n";
-                String saltoAfirmativo = "blt $t"+(currentTemp-1) + " , $t"+(currentTemp-2) + " , "+ idFunc + "_pow_"+ structs;
+                String res= "\ns.s " + lastRegister + ", res_" +idFunc+"_pow_"+ structs/*+ "\nlwc1 $f"+getCurrentTemp() + ", res_" +idFunc+"_pow_"+ structs+ "\n"*/;
+                String multiplicacion = "mul.s "+ lastRegister + ", " + lastRegister + ", " + "$f"+(getPreviousTemp(1))+ "\nswc1 " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                String add="\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+(getPreviousTemp(1)) + ", $t"+(getPreviousTemp(1)) + ", 1\n" 
+                + "sw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_pow_"+ structs + "\n";
+                String saltoAfirmativo = "blt $t"+(getPreviousTemp(1)) + " , $t"+(getPreviousTemp(2)) + " , "+ idFunc + "_pow_"+ structs;
                 String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end";
                 String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:";
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + res+ etiquetaIni +"\n" + multiplicacion + add + 
@@ -453,7 +487,7 @@ relationalExpression ::= aritmeticExpression:e1 relationalOp:op aritmeticExpress
     String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
     String temporale1 = lineas[lineas.length - 1];
     temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+currentTemp++ +" = " + temporale1 + op + "t"+(currentTemp-2);
+    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+getCurrentTemp() +" = " + temporale1 + op + "t"+(getPreviousTemp(2));
 
     RESULT = codigo;
 
@@ -471,7 +505,7 @@ logicalExpression ::= logicalExpression:e1 logicalOp:op logicalExpression:e2
     String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
     String temporale1 = lineas[lineas.length - 1];
     temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+ currentTemp++ +" = " + temporale1 + op + "t"+(currentTemp-2);
+    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+ getCurrentTemp() +" = " + temporale1 + op + "t"+(getPreviousTemp(2));
 
     RESULT = codigo;
 
@@ -485,7 +519,7 @@ logicalExpression ::= LPAREN logicalExpression:e1 RPAREN
 logicalExpression ::= NOT logicalExpression:e1
 {:
 
-    String codigo = e1.toString() + "\n" + "t"+currentTemp++ +" = !t"+(currentTemp-2);
+    String codigo = e1.toString() + "\n" + "t"+getCurrentTemp() +" = !t"+(getPreviousTemp(2));
     RESULT = codigo;
 :};
 
@@ -666,17 +700,17 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     String operacionLogica2 = e2.toString().split(":")[0];
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word"+ temporale3.split(":")[0].split(",")[1]+"\n");
     String operacionLogica3 = e3.toString().split(":")[0];
-    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+currentTemp++ +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ currentTemp++ 
+    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(currentTemp-2) + " , $t"+(currentTemp-1) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
     String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
-    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + currentTemp++ + " , "+ "step_" +idFunc+"_for_"+ structs + 
-    "\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(currentTemp-1)+", $t"+(currentTemp-1)+" , $t"+(currentTemp-2)+
-    "\nsw $t"+(currentTemp-1) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp-1) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
+    "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
+    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
+    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica3 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 
@@ -704,18 +738,18 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
     String operacionLogica2 = e2.toString().split(":")[0];
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
-    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+currentTemp++ +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ currentTemp++ 
+    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(currentTemp-2) + " , $t"+(currentTemp-1) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
     String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
 
-    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + currentTemp++ + " , "+ "step_" +idFunc+"_for_"+ structs + 
-    "\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(currentTemp-1)+", $t"+(currentTemp-1)+" , $t"+(currentTemp-2)+
-    "\nsw $t"+(currentTemp-1) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp-1) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
+    "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
+    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
+    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
@@ -741,18 +775,18 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
     String operacionLogica2 = e1.toString().split(":")[0];
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
-    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+currentTemp++ +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ currentTemp++ 
+    String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(currentTemp-2) + " , $t"+(currentTemp-1) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
     String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
 
-    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + currentTemp++ + " , "+ "step_" +idFunc+"_for_"+ structs + 
-    "\nlw $t"+currentTemp++ + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(currentTemp-1)+", $t"+(currentTemp-1)+" , $t"+(currentTemp-2)+
-    "\nsw $t"+(currentTemp-1) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp-1) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
+    "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
+    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
+    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
 
@@ -871,19 +905,19 @@ decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e1 ENDLINE
     String code = vi.toString() + "\n" + e1.toString() + "\n" ;
     switch(vi.toString().split(" ")[0]){
         case "int":
-            code += "sw $t"+(currentTemp-1)+", "+vi.toString().split(" ")[1]+"\n";
+            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
             break;
         case "float":
-            code += "s.s $f"+(currentTemp-1)+", "+vi.toString().split(" ")[1]+"\n";
+            code += "s.s $f"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
             break;
         case "bool":
-            code += "sw $t"+(currentTemp-1)+", "+vi.toString().split(" ")[1]+"\n";
+            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
             break;
         case "char":
-            code += "sb $t"+(currentTemp-1)+", "+vi.toString().split(" ")[1]+"\n";
+            code += "sb $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
             break;
         case "string":
-            code += "sw $t"+(currentTemp-1)+", "+vi.toString().split(" ")[1]+"\n";
+            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
             break;
         default:
             break;
@@ -895,7 +929,7 @@ decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e1 ENDLINE
 readData ::= READ READSYMBOL IDENTIFIER:id ENDLINE
 {:
     //cod 3d
-    String codigo = "param "+id.toString()+"\nt"+currentTemp++ +" = call read, 1";
+    String codigo = "param "+id.toString()+"\nt"+getCurrentTemp() +" = call read, 1";
     RESULT = codigo;
 
 :};
