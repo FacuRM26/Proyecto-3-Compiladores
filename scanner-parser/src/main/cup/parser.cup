@@ -70,7 +70,7 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
 
     StringBuffer mipsCode = new StringBuffer(); // Para concatenar el código mips
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
-    int currentTemp = -1; // Para generar los temporales
+    int currentTemp = 0; // Para generar los temporales
     int floatTemp = 0; // Para generar los temporales de float
 
     int structs = 0; // Para generar las etiquetas de las estructuras de control
@@ -83,21 +83,12 @@ public StringBuffer getmipsCode() { // Para obtener el código intermedio
 }
 
 public int getCurrentTemp() { 
-    if (currentTemp == 10) {
-        currentTemp = 0;
-        return currentTemp;
-    }
-    else {
-       return currentTemp++;
-    }
+    currentTemp = (currentTemp + 1) % 10;
+    return currentTemp;
 }
 public int getPreviousTemp(int previous) { 
-    if (currentTemp == 0) {
-        return 10-previous;
-    }
-    else {
-       return currentTemp-previous;
-    }
+    return (currentTemp - previous + 10) % 10;
+
 }
 
 public int getFloatTemp() { 
@@ -702,15 +693,15 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     String operacionLogica3 = e3.toString().split(":")[0];
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+ currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
     String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
-    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    "\nadd $t"+(currentTemp)+", $t"+(currentTemp)+" , $t"+(getPreviousTemp(1))+
+    "\nsw $t"+(currentTemp) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica3 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 
@@ -740,7 +731,7 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
@@ -748,8 +739,8 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
 
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
-    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    "\nadd $t"+currentTemp+", $t"+currentTemp+" , $t"+(getPreviousTemp(1))+
+    "\nsw $t"+currentTemp + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+currentTemp +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
@@ -777,7 +768,7 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
     +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(2)) + " , $t"+(getPreviousTemp(1)) + " , "+ idFunc + "_for_"+ structs + "_bloque";
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
     String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
     String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
     String statements = st.toString();
@@ -785,8 +776,8 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
 
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
-    "\nadd $t"+(getPreviousTemp(1))+", $t"+(getPreviousTemp(1))+" , $t"+(getPreviousTemp(2))+
-    "\nsw $t"+(getPreviousTemp(1)) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(getPreviousTemp(1)) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
+    "\nadd $t"+currentTemp+", $t"+currentTemp+" , $t"+(getPreviousTemp(1))+
+    "\nsw $t"+currentTemp + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+currentTemp +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
     String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
 
 
