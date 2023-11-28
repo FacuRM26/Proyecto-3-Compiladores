@@ -68,13 +68,25 @@ public ArrayList<String> getFuncParamsTypes(List<String[]> tabla) {
     return paramsTypes;
 }
 
+//Metodo que devuelve los ids de los parametros de una funcion
+public ArrayList<String> getFuncParamsIds(List<String[]> tabla) {
+    ArrayList<String> paramsIds = new ArrayList<>();
+    for (int i = 1; i < tabla.size(); i++) {
+        String[] symbol = tabla.get(i);
+        if (symbol[0].equals("Parametro")) {
+            paramsIds.add(symbol[1]);
+        }
+    }
+    return paramsIds;
+}
+
     StringBuffer mipsCode = new StringBuffer(); // Para concatenar el código mips
     StringBuffer variables  = new StringBuffer(); // Para concatenar las variables
     int currentTemp = 0; // Para generar los temporales
     int floatTemp = 0; // Para generar los temporales de float
 
     int structs = 0; // Para generar las etiquetas de las estructuras de control
-    int lastParam = 3; // Para saber el último parámetro de una función
+    int strings = 0; // Para generar las etiquetas de las cadenas
     int cantParams = 0; // Para saber la cantidad de parámetros de una función
 
 
@@ -179,33 +191,39 @@ operand ::= literal:n
         case "int":
             movInstr = "li ";    
             lastRegister = "$t" + getCurrentTemp();
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
             break;
 
         case "float":
             movInstr = "li.s ";
             lastRegister = "$f" + getFloatTemp();
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
             break;
 
         case "bool":
             movInstr = "li ";
             lastRegister = "$t" + getCurrentTemp();
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
             break;
 
         case "char":
             movInstr = "li ";
             lastRegister = "$t" + getCurrentTemp();
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
             break;
 
         case "string":
-            movInstr = "la ";
-            lastRegister = "$t" + getCurrentTemp();
+            variables.append("str_" + strings++ +": .asciiz "+ n.toString().split(":")[0] +"\n");
+            movInstr = "la $t" + getCurrentTemp() + ", str_" + (strings-1) + "\n";
+            lastRegister ="$t" + currentTemp;
+            codigo = movInstr +":" + lastRegister + ":" + tipo;
             break;
 
         default:
             break;
     }
 
-    codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+    
     RESULT = codigo;
 
 :}
@@ -255,7 +273,31 @@ operand ::= literal:n
 
 | callFunction:cf
 {:
-    RESULT = cf;
+    String tipo = tablasDeSimbolos.get(cf.toString().split(":")[1]).get(0)[1];
+
+    String movInstr = "";
+    switch(tipo){
+        case "int":
+            movInstr = "lw $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1];
+            break;
+        case "float":
+            movInstr = "l.s $f"+ getFloatTemp() +", return_"+cf.toString().split(":")[1] ;
+            break;
+        case "bool":
+            movInstr = "lw $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            break;
+        case "char":
+            movInstr = "lb $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            break;
+        case "string":
+            movInstr = "la $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            break;
+        default:
+            break;
+    }   
+    String codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;      
+
+    RESULT = codigo;
 
 :};
 
@@ -474,14 +516,9 @@ aritmeticExpression ::= operand:n
 //EXPRESIONES RELACIONALES
 relationalExpression ::= aritmeticExpression:e1 relationalOp:op aritmeticExpression:e2
 {:
+    
 
-    String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
-    String temporale1 = lineas[lineas.length - 1];
-    temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+getCurrentTemp() +" = " + temporale1 + op + "t"+(getPreviousTemp(2));
-
-    RESULT = codigo;
-
+   
 :};
 
 // EXPRESIONES LOGICAS
@@ -545,25 +582,24 @@ if_struct ::= IF LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:st BLO
     String operador="";
     String comparador = "";
 
-
     Pattern patron = Pattern.compile("==|<|>|<=|>=|!=");
     Matcher matcher = patron.matcher(temporale1.split(":")[2].toString());
-if (matcher.find()) {
-    operador = matcher.group();
-    if (operador.equals("==")) {
-        comparador = "beq ";
-    } else if (operador.equals("<")) {
-        comparador = "blt ";
-    } else if (operador.equals(">")) {
-        comparador = "bgt ";
-    } else if (operador.equals("<=")) {
-        comparador = "ble ";
-    } else if (operador.equals(">=")) {
-        comparador = "bge ";
-    } else if (operador.equals("!=")) {
-        comparador = "bne ";
-    }
-    }
+    if (matcher.find()) {
+        operador = matcher.group();
+        if (operador.equals("==")) {
+            comparador = "beq ";
+        } else if (operador.equals("<")) {
+            comparador = "blt ";
+        } else if (operador.equals(">")) {
+            comparador = "bgt ";
+        } else if (operador.equals("<=")) {
+            comparador = "ble ";
+        } else if (operador.equals(">=")) {
+            comparador = "bge ";
+        } else if (operador.equals("!=")) {
+            comparador = "bne "; 
+        }
+        }
 
     String codigo = operacionLogica1.trim() +"\n"+operacionLogica2+"\n"+ comparador + registro1 + ", " + registro2 + ", " + idFunc + "_if_"+ (structs) + "_bloque\nb " 
     +idFunc + "_if_"+ (structs) + "_bloque_end"+ "\n" + idFunc + "_if_"+ (structs) + "_bloque: \n"+ st.toString() + "\nb " 
@@ -593,9 +629,7 @@ if_else_struct ::= if_struct:if_strc ELSE BLOCKSTART statements:st BLOCKEND
     ifCode = ifCode.substring(0, ifCode.lastIndexOf("\n")); // Elimina la última línea
  
     String codigo = ifCode + "\n" + etiquetaElse + st.toString() + "\n" + etiquetaElseEnd+ etiquetaEndIf;
-        for (int i = 0; i < lineas.length; i++) {
-        System.out.println("linea "+i +": "+lineas[i]);
-    }
+
     RESULT = codigo;
 
 :};
@@ -848,7 +882,7 @@ varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
             break;
     }
 
-    RESULT= t.toString()+" "+idVar.toString();
+    RESULT= t.toString()+":"+idVar.toString();
 
 :};
 
@@ -890,37 +924,62 @@ assignment ::= IDENTIFIER:id ASSIGN expression:e ENDLINE
 
 :};
 
-decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e1 ENDLINE
+decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e ENDLINE
 {:
- 
-    String code = vi.toString() + "\n" + e1.toString() + "\n" ;
-    switch(vi.toString().split(" ")[0]){
+    String exprCode = e.toString().split(":")[0];
+    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2];
+    String id = vi.toString().split(":")[1];
+
+    String movInstr = "";
+
+    switch(tipoExpr){
         case "int":
-            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
+            movInstr = "sw ";    
             break;
         case "float":
-            code += "s.s $f"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
+            movInstr = "s.s ";
             break;
         case "bool":
-            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
+            movInstr = "sw ";
             break;
         case "char":
-            code += "sb $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
+            movInstr = "sb ";
             break;
-        case "string":
-            code += "sw $t"+(getPreviousTemp(1))+", "+vi.toString().split(" ")[1]+"\n";
+        case "string": //revisar strings
+            movInstr = "sb ";
             break;
         default:
             break;
     }
+
+    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString();
     RESULT = code;
 
 :};
 
 readData ::= READ READSYMBOL IDENTIFIER:id ENDLINE
 {:
-    //cod 3d
-    String codigo = "param "+id.toString()+"\nt"+getCurrentTemp() +" = call read, 1";
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String movInstr = "";
+    String codigo = "";
+    String lastRegister = "";
+    
+    switch(tipo){
+        case "int":
+            lastRegister = "$t" + getCurrentTemp();
+            codigo = "li $v0, 5\nsyscall\nsw $v0 , "+ id.toString();
+            break;
+
+        case "float":
+            lastRegister = "$f" + getFloatTemp();
+            codigo = "li $v0, 6\nsyscall\ns.s" + lastRegister + ", "+ id.toString();
+            break;
+
+        default:
+            break;
+    }
+
     RESULT = codigo;
 
 :};
@@ -965,123 +1024,93 @@ printData ::= PRINT PRINTSYMBOL expression:e ENDLINE
 sendParameters ::= expression:e
 {:
 
-    String tipoExpr = e.toString().split(":")[1];
-    String lastRegister = e.toString().split(":")[0];
-
-    String movInstr = "";
-    String code = "";
-
+    String tipoExpr = e.toString().split(":")[2];
+    String lastRegister = e.toString().split(":")[1];
+    String codigo = "";
 
     switch(tipoExpr){
         case "int":
-            movInstr = "li";    
+            codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";   
             break;
+
         case "float":
-            movInstr = "li.s";
+            codigo = "s.s " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "bool":
-            movInstr = "li";
+            codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "char":
-            movInstr = "lb";
+            codigo = "sb " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "string":
-            movInstr = "la";
+            codigo = "sb " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         default:
             break;
     } 
 
-    switch(lastParam) {
-        case 1:
-            code = movInstr + " $a2, "+ lastRegister;
-            lastParam = 2;
-            break;
-        case 2:
-            code = movInstr + " $a3, "+ lastRegister;
-            lastParam = 3;
-            break;
-        case 3:
-            code = movInstr +" $a0, "+ lastRegister;
-            lastParam = 0;
-            break;
-        case 0:
-            code = movInstr + " $a1, "+ lastRegister;
-            lastParam = 1;
-            break;
-        default:
-            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
-    }
-
-    RESULT = code;
+    RESULT = e.toString().split(":")[0] + "\n" + codigo;
 :}
 
 | sendParameters:sp COMMA expression:e
 {:
-
-    String tipoExpr = e.toString().split(":")[1];
-    String lastRegister = e.toString().split(":")[0];
-
-    String movInstr = "";
-    String code = "";
-
+    String tipoExpr = e.toString().split(":")[2];
+    String lastRegister = e.toString().split(":")[1];
+    String codigo = "";
 
     switch(tipoExpr){
         case "int":
-            movInstr = "li";    
+            codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";   
             break;
+
         case "float":
-            movInstr = "li.s";
+            codigo = "s.s " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "bool":
-            movInstr = "li";
+            codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "char":
-            movInstr = "lb";
+            codigo = "sb " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         case "string":
-            movInstr = "la";
+            codigo = "sb " + lastRegister + ", param" + cantParams++ + "\n";
             break;
+
         default:
             break;
     } 
 
-    switch(lastParam) {
-        case 1:
-            code = movInstr + " $a2, "+ lastRegister;
-            lastParam = 2;
-            break;
-        case 2:
-            code = movInstr + " $a3, "+ lastRegister;
-            lastParam = 3;
-            break;
-        case 3:
-            code = movInstr +" $a0, "+ lastRegister;
-            lastParam = 0;
-            break;
-        case 0:
-            code = movInstr + " $a1, "+ lastRegister;
-            lastParam = 1;
-            break;
-        default:
-            code = "addi $sp, $sp, -4" + "\n sw" + lastRegister + ", 0($sp)";
-    }
-
-    RESULT = sp.toString() + "\n" + code;
+    RESULT = sp.toString() + "\n" + e.toString().split(":")[0] + "\n" + codigo;
 
 :};
 
 callFunction ::= IDENTIFIER:id LPAREN sendParameters:sp  RPAREN
 {:
 
-    String codigo = sp.toString() + "jal "+id.toString();
+    String sendParams = sp.toString();
+    ArrayList<String> paramsIds = getFuncParamsIds(tablasDeSimbolos.get(id.toString()));
+    String codigo = "";
+
+    for (int i = 0; i< paramsIds.size(); i++){
+       sendParams = sendParams.replace("param"+i, paramsIds.get(i));
+    }
+
+    codigo = sendParams + "jal "+id.toString()+ ":"+ id.toString();
+    cantParams = 0;
     RESULT = codigo;
 
 :};
 
 callFunction ::= IDENTIFIER:id LPAREN RPAREN
 {:
-    String codigo = "jal "+id.toString();
+    String codigo = "jal "+id.toString()+ ":"+ id.toString();
     RESULT = codigo;
 
 :};
@@ -1089,20 +1118,48 @@ callFunction ::= IDENTIFIER:id LPAREN RPAREN
 
 callFunction_statement ::= callFunction:cf ENDLINE
 {:
-        RESULT = cf;
+        RESULT = cf.toString().split(":")[0];
 :};
 
 return_statement ::= RETURN SEPARATOR expression:e ENDLINE
 {:
 
-    String codigo = e.toString() + "\n" + "  jr $ra";
-    RESULT = codigo;
+    String codigo = e.toString().split(":")[0] + "\n";
+    String move="";
+    String tipo = e.toString().split(":")[2];
+    String lastRegister = e.toString().split(":")[1];
+    switch(tipo){
+        case "int":
+            variables.append("return_" +currentHash+": .word 0\n");
+            move = "sw "+lastRegister+", return_" +currentHash;
+            break;
+        case "float":
+            variables.append("return_" +currentHash+": .float 0.0\n");
+            move = "s.s "+lastRegister+", return_" +currentHash;
+            break;
+        case "bool":
+            variables.append("return_" +currentHash+": .word 0\n");
+            move = "sw "+lastRegister+", return_" +currentHash;
+            break;
+        case "char":
+            variables.append("return_" +currentHash+": .byte 0\n");
+            move = "sb "+lastRegister+", return_" +currentHash;
+            break;
+        case "string":
+            variables.append("return_" +currentHash+": .asciiz \"\"\n");
+            move = "sb "+lastRegister+", return_" +currentHash;
+            break;
+        default :
+            break;
+    }
+
+    RESULT = codigo+"\n"+move+ "\njr $ra" ;
 
 :}
 | RETURN ENDLINE
 {:
    
-    String codigo = "  jr $ra";
+    String codigo = "jr $ra";
     RESULT = codigo;
 
 :}
@@ -1148,23 +1205,30 @@ parameter ::= type:t SEPARATOR IDENTIFIER:idParam
      
     switch(t.toString()){
         case "int":
-            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            variables.append(idParam.toString()+": .word 0\n");
             break;
         case "float":
-            variables.append(currentHash + "_" + idParam.toString()+": .float 0.0\n");
+            variables.append(idParam.toString()+": .float 0.0\n");
             break;
         case "bool":
-            variables.append(currentHash + "_" + idParam.toString()+": .word 0\n");
+            variables.append(idParam.toString()+": .word 0\n");
             break;
         case "char":
-            variables.append(currentHash + "_" + idParam.toString()+": .byte 0\n");
+            variables.append(idParam.toString()+": .byte 0\n");
             break;
         case "string":
-            variables.append(currentHash + "_" + idParam.toString()+": .asciiz \"\"\n");
+            variables.append(idParam.toString()+": .asciiz \"\"\n");
             break;
         default :
             break;
     }
+  
+    //Agregar a la tabla de simbolos
+    String[] symbol = new String[3];
+    symbol[0] = "Parametro";
+    symbol[1] = idParam.toString();
+    symbol[2] = t.toString();
+    tablasDeSimbolos.get(currentHash).add(symbol);
   
 :};
 
@@ -1196,7 +1260,7 @@ functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
         tablasDeSimbolos.put(currentHash, tabla);
 
        //Codigo MIPS
-        currentTemp = 1;
+        //currentTemp = 1;
         String codigo = idFunc.toString()+":\n";
         RESULT = codigo;
 
@@ -1208,7 +1272,7 @@ function ::= functionIdentifier:fi LPAREN parameters RPAREN BLOCKSTART statement
 
 
     String cierreFuncion = "\nend_"+fi.toString();
-    String code = fi.toString() + st.toString() + cierreFuncion;
+    String code = fi.toString() + st.toString() + cierreFuncion ;
     RESULT = code;
 
 :}
