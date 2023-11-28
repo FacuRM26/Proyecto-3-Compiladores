@@ -94,27 +94,18 @@ public StringBuffer getmipsCode() { // Para obtener el código intermedio
     return  mipsCode;
 }
 
-public int getCurrentTemp() { 
+public int getCurrentTemp() { // Para obtener el temporal actual
     currentTemp = (currentTemp + 1) % 10;
     return currentTemp;
 }
-public int getPreviousTemp(int previous) { 
+public int getPreviousTemp(int previous) { // Para obtener el temporal anterior
     return (currentTemp - previous + 10) % 10;
 
 }
 
-public int getFloatTemp() { 
-    if (floatTemp == 31) {
-        floatTemp = 0;
-        return floatTemp;
-    }
-    else if (floatTemp == 12) {
-        floatTemp = 13;
-        return floatTemp;
-    }
-    else {
-       return floatTemp++;
-    }
+public int getFloatTemp() { // Para obtener el temporal actual de float
+    floatTemp = (floatTemp + 1) % 31;
+    return floatTemp;
 }
 
 
@@ -182,41 +173,41 @@ aritmeticOp ::= PLUS:plus {: RESULT = plus; :}
 operand ::= literal:n
 {:
    
-    String tipo = n.toString().split(":")[1];
+    String tipo = n.toString().split(":")[1]; // Obtiene el tipo del literal
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-     switch(tipo){
+     switch(tipo){//dependiendo del tipo del literal se genera el codigo mips
         case "int":
             movInstr = "li ";    
             lastRegister = "$t" + getCurrentTemp();
-            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
             break;
 
         case "float":
             movInstr = "li.s ";
             lastRegister = "$f" + getFloatTemp();
-            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;//se genera el codigo mips
             break;
 
         case "bool":
             movInstr = "li ";
             lastRegister = "$t" + getCurrentTemp();
-            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;//se genera el codigo mips
             break;
 
         case "char":
             movInstr = "li ";
             lastRegister = "$t" + getCurrentTemp();
-            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;//se genera el codigo mips
             break;
 
         case "string":
-            variables.append("str_" + strings++ +": .asciiz "+ n.toString().split(":")[0] +"\n");
+            variables.append("str_" + strings++ +": .asciiz "+ n.toString().split(":")[0] +"\n"); //se agrega la variable
             movInstr = "la $t" + getCurrentTemp() + ", str_" + (strings-1) + "\n";
             lastRegister ="$t" + currentTemp;
-            codigo = movInstr +":" + lastRegister + ":" + tipo;
+            codigo = movInstr +":" + lastRegister + ":" + tipo;//se genera el codigo mips
             break;
 
         default:
@@ -224,19 +215,19 @@ operand ::= literal:n
     }
 
     
-    RESULT = codigo;
+    RESULT = codigo; //se devuelve el codigo mips
 
 :}
 
 | IDENTIFIER:id
 {:
 
-    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2]; // Obtiene el tipo del identificador
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-     switch(tipo){
+     switch(tipo){ //dependiendo del tipo del identificador se genera el codigo mips
         case "int":
             movInstr = "lw ";    
             lastRegister = "$t" + getCurrentTemp();
@@ -266,36 +257,42 @@ operand ::= literal:n
             break;
     }
 
-    codigo = movInstr + lastRegister+", "+ id.toString() + ":" + lastRegister + ":" + tipo;
-    RESULT = codigo;
+    codigo = movInstr + lastRegister+", "+ id.toString() + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
+    RESULT = codigo; //se devuelve el codigo mips
 
 :}
 
 | callFunction:cf
 {:
-    String tipo = tablasDeSimbolos.get(cf.toString().split(":")[1]).get(0)[1];
+    String tipo = tablasDeSimbolos.get(cf.toString().split(":")[1]).get(0)[1]; // Obtiene el tipo de la función
 
     String movInstr = "";
-    switch(tipo){
+    String codigo = "";
+    switch(tipo){ //dependiendo del tipo de la función se genera el codigo mips
         case "int":
-            movInstr = "lw $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1];
+            movInstr = "lw $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1]; 
+            codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;   //se genera el codigo mips  
             break;
         case "float":
             movInstr = "l.s $f"+ getFloatTemp() +", return_"+cf.toString().split(":")[1] ;
+            codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$f" + floatTemp + ":" + tipo;   //se genera el codigo mips  
             break;
         case "bool":
             movInstr = "lw $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;   //se genera el codigo mips  
             break;
         case "char":
             movInstr = "lb $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;   //se genera el codigo mips  
             break;
         case "string":
             movInstr = "la $t"+ getCurrentTemp() +", return_"+cf.toString().split(":")[1] ;
+            codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;   //se genera el codigo mips  
             break;
         default:
             break;
     }   
-    String codigo = cf.toString().split(":")[0] + "\n" + movInstr + ":$t" + currentTemp + ":" + tipo;      
+    
 
     RESULT = codigo;
 
@@ -321,12 +318,12 @@ aritmeticExpression ::= operand:n
 
 {:
 
-    String tipo = n.toString().split(":")[1];
+    String tipo = n.toString().split(":")[1]; // Obtiene el tipo del literal
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-     switch(tipo){
+     switch(tipo){ //dependiendo del tipo del literal se genera el codigo mips
         case "int":
             movInstr = "li ";    
             lastRegister = "$t" + getCurrentTemp();
@@ -341,30 +338,30 @@ aritmeticExpression ::= operand:n
             break;
     }
 
-    codigo = movInstr + lastRegister+", -"+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo;
+    codigo = movInstr + lastRegister+", -"+ n.toString().split(":")[0] + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
     RESULT = codigo;
 :}
 
 | IDENTIFIER:id INCREMENT
 {:
 
-    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2]; // Obtiene el tipo del identificador
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-    switch(tipo){
+    switch(tipo){ //dependiendo del tipo del identificador se genera el codigo mips
         case "int":
             movInstr = "lw ";    
             lastRegister = "$t" + getCurrentTemp();
-            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", 1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", 1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
             break;
     
         case "float":
             String moveToRegister = "li.s $f" + getFloatTemp() + ", 1.0\n" ;
             movInstr = "l.s ";
             lastRegister = "$f" + getFloatTemp();
-            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
             break;
     
         default:
@@ -378,23 +375,23 @@ aritmeticExpression ::= operand:n
 | IDENTIFIER:id DECREMENT
 {:
 
-   String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+   String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2]; // Obtiene el tipo del identificador
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-    switch(tipo){
+    switch(tipo){ //dependiendo del tipo del identificador se genera el codigo mips
         case "int":
             movInstr = "lw ";    
             lastRegister = "$t" + getCurrentTemp();
-            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", -1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister+", "+ id.toString() + "\naddi " + lastRegister + ", " + lastRegister + ", -1\nsw " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
             break;
     
         case "float":
             String moveToRegister = "li.s $f" + getFloatTemp() + ", -1.0\n" ;
             movInstr = "l.s ";
             lastRegister = "$f" + getFloatTemp();
-            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo;
+            codigo = movInstr + lastRegister + ", "+ id.toString() + "\n" + moveToRegister + "add.s " + lastRegister + ", " + lastRegister + ", $f" + (floatTemp-2) + "\ns.s " + lastRegister + ", " + id.toString() + ":" + lastRegister + ":" + tipo; //se genera el codigo mips
             break;
     
         default:
@@ -409,12 +406,12 @@ aritmeticExpression ::= operand:n
 | aritmeticExpression:e1 aritmeticOp:op aritmeticExpression:e2
 {:
     //codigo mips
-    String operand = op.toString(); 
+    String operand = op.toString();  // Obtiene el operando
     String opInstr = "";
     String codigo = "";
-    String lastRegister = e1.toString().split(":")[1];
-    String tipo = e1.toString().split(":")[2];
-    switch(tipo){
+    String lastRegister = e1.toString().split(":")[1]; // Obtiene el último temporal generado
+    String tipo = e1.toString().split(":")[2]; // Obtiene el tipo del último temporal generado
+    switch(tipo){ //dependiendo del tipo del identificador se genera el codigo mips
         case "int":
             if (operand.equals("+")) {
                 opInstr  = "add ";    
@@ -438,25 +435,27 @@ aritmeticExpression ::= operand:n
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0] + " \nli " +temp+ ",0 \n"+  opInstr + lastRegister + "," + e2.toString().split(":")[1] +"\nmfhi "+ temp+ ":" + temp + ":" + tipo;
             } else if (operand.equals("^")) {
                 String idFunc = currentHash;
-                variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n");
-                variables.append("res_" +idFunc+"_pow_"+ structs +": .word "+ 0 +"\n");
+                variables.append("ini_" +idFunc+"_pow_"+ ++structs +": .word "+ 0 +"\n"); //se agrega la variable inicializadora del ciclo
+                variables.append("res_" +idFunc+"_pow_"+ structs +": .word "+ 0 +"\n");//se agrega la variable resultado del ciclo
                 
-                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":";
-                String res= "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlw $t"+getCurrentTemp() + ", res_" +idFunc+"_pow_"+ structs+ "\nsw $t"+getCurrentTemp() + ", ini_" +idFunc+"_pow_"+ structs+ "\n";
-                String iniCont= "\nli $t" + getPreviousTemp(1) + ", 1";
-                String multiplicacion = "sw $t"+getPreviousTemp(1) +  ", ini_" +idFunc+"_pow_"+ structs+ "\nmul "+ lastRegister + ", " + lastRegister + ", " + "$t"+(getPreviousTemp(2))+ "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n";
+                String etiquetaIni= "\n" +idFunc+"_pow_"+ (structs) +":"; //se genera la etiqueta inicial del ciclo
+                String res= "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\nlw $t"+getCurrentTemp() + ", res_" +idFunc+"_pow_"+ structs+ "\nsw $t"
+                +getCurrentTemp() + ", ini_" +idFunc+"_pow_"+ structs+ "\n"; //se genera el codigo mips para guardar el resultado y la variable inicializadora del ciclo
+                String iniCont= "\nli $t" + getPreviousTemp(1) + ", 1"; //se genera el codigo mips para inicializar el contador del ciclo
+                String multiplicacion = "sw $t"+getPreviousTemp(1) +  ", ini_" +idFunc+"_pow_"+ structs+ "\nmul "+ lastRegister + ", " + lastRegister + ", " 
+                + "$t"+(getPreviousTemp(2))+ "\nsw " + lastRegister + ", res_" +idFunc+"_pow_"+ structs+ "\n"; //se genera el codigo mips para multiplicar el resultado por el primer operando
                 
-                String add="\nlw $t"+getPreviousTemp(1) + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+getPreviousTemp(1) + ", $t"+getPreviousTemp(1) + ", 1\n";
-                String saltoAfirmativo = "blt $t"+(getPreviousTemp(1)) + " , $t"+(getPreviousTemp(3)) + " , "+ idFunc + "_pow_"+ structs;
-                String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end";
-                String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:";
+                String add="\nlw $t"+getPreviousTemp(1) + ", ini_" +idFunc+"_pow_"+ structs+ "\nadd $t"+getPreviousTemp(1) + ", $t"+getPreviousTemp(1) + ", 1\n";//se genera el codigo mips para incrementar el contador del ciclo
+                String saltoAfirmativo = "blt $t"+(getPreviousTemp(1)) + " , $t"+(getPreviousTemp(3)) + " , "+ idFunc + "_pow_"+ structs; //se genera el codigo mips para saltar al ciclo
+                String saltoNegativo = "\nb " + idFunc + "_pow_"+ structs + "_end"; //se genera el codigo mips para saltar al final del ciclo
+                String etiquetaEnd = "\n"+ idFunc + "_pow_"+ structs + "_end:"; //se genera la etiqueta final del ciclo
                 codigo = e1.toString().split(":")[0] + "\n" +  e2.toString().split(":")[0]+iniCont + res+ etiquetaIni +"\n" + multiplicacion + add + saltoAfirmativo + saltoNegativo + etiquetaEnd+ ":"+ 
-                lastRegister + ":" + tipo;
+                lastRegister + ":" + tipo; //se genera el codigo mips
 
             }
             break;
 
-        case "float":
+        case "float": //dependiendo del tipo del identificador se genera el codigo mips
             if(operand.equals("+"))
             {
                 opInstr  = "add.s ";    
@@ -533,7 +532,7 @@ logicalExpression ::= logicalExpression:e1 logicalOp:op logicalExpression:e2
     String[] lineas = e1.toString().split("\n");  // Divide la cadena en líneas
     String temporale1 = lineas[lineas.length - 1];
     temporale1 = temporale1.split(" = ")[0]; // Obtiene el último temporal generado
-    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+ getCurrentTemp() +" = " + temporale1 + op + "t"+(getPreviousTemp(2));
+    String codigo = e1.toString() + "\n" + e2.toString() + "\n" + "t"+ getCurrentTemp() +" = " + temporale1 + op + "t"+(getPreviousTemp(2)); //se genera el codigo mips
 
     RESULT = codigo;
 
@@ -547,7 +546,7 @@ logicalExpression ::= LPAREN logicalExpression:e1 RPAREN
 logicalExpression ::= NOT logicalExpression:e1
 {:
 
-    String codigo = e1.toString() + "\n" + "t"+getCurrentTemp() +" = !t"+(getPreviousTemp(2));
+    String codigo = e1.toString() + "\n" + "t"+getCurrentTemp() +" = !t"+(getPreviousTemp(2)); //se genera el codigo mips
     RESULT = codigo;
 :};
 
@@ -582,11 +581,11 @@ if_struct ::= IF LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:st BLO
     String operador="";
     String comparador = "";
 
-    Pattern patron = Pattern.compile("==|<|>|<=|>=|!=");
-    Matcher matcher = patron.matcher(temporale1.split(":")[2].toString());
-    if (matcher.find()) {
-        operador = matcher.group();
-        if (operador.equals("==")) {
+    Pattern patron = Pattern.compile("==|<|>|<=|>=|!="); //se obtiene el operador de la expresion logica
+    Matcher matcher = patron.matcher(temporale1.split(":")[2].toString()); //se obtiene el operador de la expresion logica
+    if (matcher.find()) { //si hay operador
+        operador = matcher.group(); //se obtiene el operador de la expresion logica
+        if (operador.equals("==")) { //depende del operador se genera el codigo mips
             comparador = "beq ";
         } else if (operador.equals("<")) {
             comparador = "blt ";
@@ -604,7 +603,7 @@ if_struct ::= IF LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:st BLO
     String codigo = operacionLogica1.trim() +"\n"+operacionLogica2+"\n"+ comparador + registro1 + ", " + registro2 + ", " + idFunc + "_if_"+ (structs) + "_bloque\nb " 
     +idFunc + "_if_"+ (structs) + "_bloque_end"+ "\n" + idFunc + "_if_"+ (structs) + "_bloque: \n"+ st.toString() + "\nb " 
     +idFunc + "_if_"+ (structs) + "_end\n" + idFunc + "_if_"+ structs + "_bloque_end:"+
-    "\n" + idFunc + "_if_"+ (structs) + "_end:";
+    "\n" + idFunc + "_if_"+ (structs) + "_end:"; //se genera el codigo mips
     
 
     RESULT = codigo;
@@ -649,15 +648,15 @@ while_struct ::= WHILE LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:
     String comparador = "";
 
     //moverme a antes de la expresion logica
-    String etiquetaPrincipal = idFunc+"_while_"+ ++structs+":";
-    String etiquetaCondicion = "\n" + idFunc + "_while_"+ structs + "_condition:\n" ;
+    String etiquetaPrincipal = idFunc+"_while_"+ ++structs+":"; //se genera la etiqueta principal del ciclo
+    String etiquetaCondicion = "\n" + idFunc + "_while_"+ structs + "_condition:\n" ; //se genera la etiqueta de la condicion del ciclo
 
 
-    Pattern patron = Pattern.compile("==|<|>|<=|>=|!=");
-    Matcher matcher = patron.matcher(temporale1.split(":")[2].toString());
-    if (matcher.find()) {
-        operador = matcher.group();
-    if (operador.equals("==")) {
+    Pattern patron = Pattern.compile("==|<|>|<=|>=|!="); //se obtiene el operador de la expresion logica
+    Matcher matcher = patron.matcher(temporale1.split(":")[2].toString()); //se obtiene el operador de la expresion logica
+    if (matcher.find()) { //si hay operador
+        operador = matcher.group();//se obtiene el operador de la expresion logica
+    if (operador.equals("==")) { //depende del operador se genera el codigo mips
         comparador = "beq ";
     } else if (operador.equals("<")) {
         comparador = "blt ";
@@ -671,12 +670,12 @@ while_struct ::= WHILE LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:
         comparador = "bne ";
     }
     }
-    String saltoAfirmativo =comparador + registro1 + ", " + registro2 + ", " + idFunc + "_while_"+ (structs) + "_bloque";
-    String saltoNegativo = "\nb " + idFunc + "_while_"+ (structs) + "_bloque_end";
-    String etiquetaBloque = "\n"+ idFunc + "_while_"+ structs + "_bloque:\n";
+    String saltoAfirmativo =comparador + registro1 + ", " + registro2 + ", " + idFunc + "_while_"+ (structs) + "_bloque"; //se genera el codigo mips para saltar al ciclo
+    String saltoNegativo = "\nb " + idFunc + "_while_"+ (structs) + "_bloque_end"; //  se genera el codigo mips para saltar al final del ciclo
+    String etiquetaBloque = "\n"+ idFunc + "_while_"+ structs + "_bloque:\n"; //se genera la etiqueta del bloque del ciclo
     String statements = st.toString();
     String etiquetaBloqueEnd = "\nb "+ idFunc + "_while_"+ structs + "_condition\n"+ idFunc +
-    "_while_"+ structs + "_bloque_end:" + "\n" + idFunc + "_while_"+ structs + "_end:";
+    "_while_"+ structs + "_bloque_end:" + "\n" + idFunc + "_while_"+ structs + "_end:"; //se genera la etiqueta del final del ciclo
     RESULT = etiquetaPrincipal + etiquetaCondicion + operacionLogica1 +"\n"+ operacionLogica2 + "\n" + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetaBloqueEnd;
 
 :};
@@ -684,17 +683,17 @@ while_struct ::= WHILE LPAREN logicalExpression:e1 RPAREN BLOCKSTART statements:
 while_else_struct ::= while_struct:while_stc ELSE BLOCKSTART statements:st BLOCKEND
 {:
     //cod 3d
-    String idFunc = currentHash;
+    String idFunc = currentHash; // Obtiene el tipo del identificador
     String whilecode = while_stc.toString();
 
     //insertar codigo del else antes de la ultima linea de whilecode
     String[] lineas = whilecode.split("\n");  // Divide la cadena en líneas
     String etiquetaEndWhile = lineas[lineas.length - 1];
-    String etiquetaElse = etiquetaEndWhile.replace("end", "else")+"\n";
-    String etiquetaElseEnd = etiquetaElse.replace(":", "_end:");
-    whilecode = whilecode.substring(0, whilecode.lastIndexOf("\n"));
+    String etiquetaElse = etiquetaEndWhile.replace("end", "else")+"\n"; //se genera la etiqueta del else
+    String etiquetaElseEnd = etiquetaElse.replace(":", "_end:"); //se genera la etiqueta del final del else
+    whilecode = whilecode.substring(0, whilecode.lastIndexOf("\n")); // Elimina la última línea
 
-    String codigo = whilecode + "\n" + etiquetaElse + st.toString() + "\n" + etiquetaElseEnd+ etiquetaEndWhile;
+    String codigo = whilecode + "\n" + etiquetaElse + st.toString() + "\n" + etiquetaElseEnd+ etiquetaEndWhile; //se genera el codigo mips
 
     RESULT = codigo;
 
@@ -716,27 +715,27 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     temporale3 = temporale3.split(" = ")[0]; // Obtiene el último temporal generado
 
     //moverme a antes de la expresion logica
-    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n";
-    variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n");
-    String operacion =e1.toString().split(":")[0];
-    String operacion2 = operacion.toString().split("t")[1];
-    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString(); 
-    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
-    String operacionLogica2 = e2.toString().split(":")[0];
-    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word"+ temporale3.split(":")[0].split(",")[1]+"\n");
-    String operacionLogica3 = e3.toString().split(":")[0];
+    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n"; //se genera la etiqueta inicial del ciclo
+    variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n"); //se agrega la variable inicializadora del ciclo
+    String operacion =e1.toString().split(":")[0]; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String operacion2 = operacion.toString().split("t")[1]; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString();  // se genera el codigo mips para guardar la variable inicializadora del ciclo
+    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n"); //se agrega la variable final del ciclo
+    String operacionLogica2 = e2.toString().split(":")[0]; //se genera el codigo mips para guardar la variable final del ciclo
+    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word"+ temporale3.split(":")[0].split(",")[1]+"\n"); //se agrega la variable del paso del ciclo
+    String operacionLogica3 = e3.toString().split(":")[0]; //se genera el codigo mips para guardar la variable del paso del ciclo
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
-    +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+ currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
-    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
-    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
-    String statements = st.toString();
-    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
+    +" , fin_" +idFunc+"_for_"+ structs; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+ currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque"; //se genera el codigo mips para saltar al ciclo
+    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end"; //se genera el codigo mips para saltar al final del ciclo
+    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n"; //se genera la etiqueta del bloque del ciclo
+    String statements = st.toString(); //se genera el codigo mips para guardar el resultado y la variable inicializadora del ciclo
+    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc"; //se genera el codigo mips para saltar al incremento del ciclo
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
     "\nadd $t"+(currentTemp)+", $t"+(currentTemp)+" , $t"+(getPreviousTemp(1))+
-    "\nsw $t"+(currentTemp) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
-    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
+    "\nsw $t"+(currentTemp) + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+(currentTemp) +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition"; //se genera el codigo mips para incrementar el contador del ciclo
+    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:"; //se genera la etiqueta del final del ciclo
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica3 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 
 
@@ -755,27 +754,27 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
     String temporale2 = lineas2[lineas2.length - 1];
     temporale2 = temporale2.split(" = ")[0]; // Obtiene el último temporal generado
 
-    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n";
-    variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n");
-    String operacion =e1.toString().split(":")[0];
-    String operacion2 = operacion.toString().split("t")[1];
-    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString(); 
-    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
-    String operacionLogica2 = e2.toString().split(":")[0];
-    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
+    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n"; //se genera la etiqueta inicial del ciclo
+    variables.append("ini_" +idFunc+"_for_"+ structs +": .word"+ temporale1.split(":")[0].split(",")[1]+"\n"); //se agrega la variable inicializadora del ciclo
+    String operacion =e1.toString().split(":")[0]; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String operacion2 = operacion.toString().split("t")[1]; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String operacionLogica1 = e1.toString().split(":")[0]+ "\nsw $t" +operacion2.split(",")[0]+", "+ id.toString();  // se genera el codigo mips para guardar la variable inicializadora del ciclo
+    variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");    //se agrega la variable final del ciclo
+    String operacionLogica2 = e2.toString().split(":")[0]; //se genera el codigo mips para guardar la variable final del ciclo
+    variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");  //se agrega la variable del paso del ciclo
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
-    +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
-    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
-    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
+    +" , fin_" +idFunc+"_for_"+ structs; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque"; //se genera el codigo mips para saltar al ciclo
+    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end"; //se genera el codigo mips para saltar al final del ciclo
+    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n"; //se genera la etiqueta del bloque del ciclo
     String statements = st.toString();
-    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
+    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";   //se genera el codigo mips para saltar al incremento del ciclo
 
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
     "\nadd $t"+currentTemp+", $t"+currentTemp+" , $t"+(getPreviousTemp(1))+
     "\nsw $t"+currentTemp + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+currentTemp +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
-    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
+    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:"; //se genera la etiqueta del final del ciclo
 
     RESULT = etiquetaIni + operacionLogica1 + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
 :}
@@ -791,28 +790,28 @@ for_range_struct ::= FOR SEPARATOR IDENTIFIER:id SEPARATOR IN SEPARATOR RANGE LP
 
 
     //moverme a antes de la expresion logica
-    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n";
-    variables.append("ini_" +idFunc+"_for_"+ structs +": .word 0"+"\n");
+    String etiquetaIni= idFunc+"_for_"+ ++structs+":\n"; //se genera la etiqueta inicial del ciclo
+    variables.append("ini_" +idFunc+"_for_"+ structs +": .word 0"+"\n"); //se agrega la variable inicializadora del ciclo
 
-    String etiquetaFin= "\ndata_Int fin_" +idFunc+"_for_"+ structs+ "\n";
+    String etiquetaFin= "\ndata_Int fin_" +idFunc+"_for_"+ structs+ "\n"; //se agrega la variable final del ciclo
 
 
     variables.append("\nfin_" +idFunc+"_for_"+ structs +": .word"+ temporale2.split(":")[0].split(",")[1]+"\n");
-    String operacionLogica2 = e1.toString().split(":")[0];
+    String operacionLogica2 = e1.toString().split(":")[0]; //se genera el codigo mips para guardar la variable final del ciclo
     variables.append("\nstep_" +idFunc+"_for_"+ structs+": .word 1"+"\n");
     String operacionLogica4 = "\n" + idFunc + "_for_"+ structs + "_condition:\n" + "lw $t"+getCurrentTemp() +" , ini_" +idFunc+"_for_"+ structs +"\nlw $t"+ getCurrentTemp() 
-    +" , fin_" +idFunc+"_for_"+ structs;
-    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque";
-    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end";
-    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n";
-    String statements = st.toString();
-    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc";
+    +" , fin_" +idFunc+"_for_"+ structs; //se genera el codigo mips para guardar la variable inicializadora del ciclo
+    String saltoAfirmativo = "\nblt $t"+(getPreviousTemp(1)) + " , $t"+currentTemp + " , "+ idFunc + "_for_"+ structs + "_bloque"; //se genera el codigo mips para saltar al ciclo
+    String saltoNegativo = "\nb " + idFunc + "_for_"+ structs + "_bloque_end"; //se genera el codigo mips para saltar al final del ciclo
+    String etiquetaBloque = "\n"+ idFunc + "_for_"+ structs + "_bloque:\n"; //se genera la etiqueta del bloque del ciclo
+    String statements = st.toString(); 
+    String etiquetagoto = "\nb "+ idFunc + "_for_"+ structs + "_inc"; //se genera el codigo mips para saltar al incremento del ciclo
 
     String etiqueteInc= "\n"+ idFunc + "_for_"+ structs + "_inc: \nlw $t" + getCurrentTemp() + " , "+ "step_" +idFunc+"_for_"+ structs + 
     "\nlw $t"+getCurrentTemp() + ", ini_" +idFunc+"_for_"+ structs + 
     "\nadd $t"+currentTemp+", $t"+currentTemp+" , $t"+(getPreviousTemp(1))+
     "\nsw $t"+currentTemp + ", ini_" +idFunc+"_for_"+ structs + "\nsw $t"+currentTemp +","+id.toString() +"\nb "+ idFunc + "_for_"+ structs + "_condition";
-    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:";
+    String etiquetaBloqueEnd = "\n"+ idFunc + "_for_"+ structs + "_bloque_end:"; //se genera la etiqueta del final del ciclo
 
 
     RESULT = etiquetaIni + "\n" + operacionLogica2 + "\n" + operacionLogica4 + saltoAfirmativo + saltoNegativo + etiquetaBloque + statements + etiquetagoto + etiqueteInc + etiquetaBloqueEnd;
@@ -824,7 +823,7 @@ default_statement ::= DEFAULT DOTS statements;
 case_statement ::= CASE SEPARATOR literal:lit DOTS statements
 {:
   //code 3d
-    String codigo = ++structs+"case_"+lit.toString().split(":")[0]+":";
+    String codigo = ++structs+"case_"+lit.toString().split(":")[0]+":"; //se genera el codigo mips
 
 :};
 
@@ -854,15 +853,15 @@ varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
 {:
 
     //Agregar a la tabla de simbolos
-    String[] symbol = new String[3];
-    symbol[0] = "Variable";
-    symbol[1] = idVar.toString();
-    symbol[2] = t.toString();
-    tablasDeSimbolos.get(currentHash).add(symbol);
+    String[] symbol = new String[3]; //se crea el arreglo para agregar a la tabla de simbolos
+    symbol[0] = "Variable"; //se agrega el tipo de simbolo
+    symbol[1] = idVar.toString(); //se agrega el identificador
+    symbol[2] = t.toString(); //se agrega el tipo de dato
+    tablasDeSimbolos.get(currentHash).add(symbol); //se agrega el simbolo a la tabla de simbolos
 
 
     //Codigo MIPS
-    switch(t.toString()){
+    switch(t.toString()){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             variables.append(idVar.toString()+": .word 0\n");
             break;
@@ -882,7 +881,7 @@ varIdentifier ::= type:t SEPARATOR IDENTIFIER:idVar
             break;
     }
 
-    RESULT= t.toString()+":"+idVar.toString();
+    RESULT= t.toString()+":"+idVar.toString(); //se genera el codigo mips
 
 :};
 
@@ -893,13 +892,13 @@ decl ::= varIdentifier ENDLINE{:
 assignment ::= IDENTIFIER:id ASSIGN expression:e ENDLINE
 {:
 
-    String exprCode = e.toString().split(":")[0];
-    String lastRegister = e.toString().split(":")[1];
-    String tipoExpr = e.toString().split(":")[2];
+    String exprCode = e.toString().split(":")[0]; //se obtiene el codigo mips de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
+    String tipoExpr = e.toString().split(":")[2]; //se obtiene el tipo de dato de la expresion
 
     String movInstr = "";
 
-    switch(tipoExpr){
+    switch(tipoExpr){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             movInstr = "sw ";    
             break;
@@ -919,21 +918,21 @@ assignment ::= IDENTIFIER:id ASSIGN expression:e ENDLINE
             break;
     }
 
-    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString();
+    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString(); //se genera el codigo mips
     RESULT = code;
 
 :};
 
 decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e ENDLINE
 {:
-    String exprCode = e.toString().split(":")[0];
-    String lastRegister = e.toString().split(":")[1];
-    String tipoExpr = e.toString().split(":")[2];
-    String id = vi.toString().split(":")[1];
+    String exprCode = e.toString().split(":")[0]; //se obtiene el codigo mips de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
+    String tipoExpr = e.toString().split(":")[2]; //se obtiene el tipo de dato de la expresion
+    String id = vi.toString().split(":")[1]; //se obtiene el identificador
 
     String movInstr = "";
 
-    switch(tipoExpr){
+    switch(tipoExpr){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             movInstr = "sw ";    
             break;
@@ -953,19 +952,19 @@ decl_and_assignment ::= varIdentifier:vi ASSIGN expression:e ENDLINE
             break;
     }
 
-    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString();
+    String code = exprCode + "\n" + movInstr + lastRegister + ", " + id.toString(); //se genera el codigo mips
     RESULT = code;
 
 :};
 
 readData ::= READ READSYMBOL IDENTIFIER:id ENDLINE
 {:
-    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2];
+    String tipo = getSymbol(tablasDeSimbolos.get(currentHash), id.toString())[2]; //se obtiene el tipo de dato de la variable
     String movInstr = "";
     String codigo = "";
     String lastRegister = "";
     
-    switch(tipo){
+    switch(tipo){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             lastRegister = "$t" + getCurrentTemp();
             codigo = "li $v0, 5\nsyscall\nsw $v0 , "+ id.toString();
@@ -987,12 +986,12 @@ readData ::= READ READSYMBOL IDENTIFIER:id ENDLINE
 printData ::= PRINT PRINTSYMBOL expression:e ENDLINE
 {:
 
-    String exprCode = e.toString().split(":")[0];
-    String lastRegister = e.toString().split(":")[1];
-    String tipoExpr = e.toString().split(":")[2];
+    String exprCode = e.toString().split(":")[0]; //se obtiene el codigo mips de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
+    String tipoExpr = e.toString().split(":")[2]; //se obtiene el tipo de dato de la expresion
     String code = "";
 
-    switch(tipoExpr){
+    switch(tipoExpr){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             code = "li $v0, 1\n" + "move $a0, " + lastRegister + "\n" + "syscall";
             break;
@@ -1024,11 +1023,11 @@ printData ::= PRINT PRINTSYMBOL expression:e ENDLINE
 sendParameters ::= expression:e
 {:
 
-    String tipoExpr = e.toString().split(":")[2];
-    String lastRegister = e.toString().split(":")[1];
-    String codigo = "";
+    String tipoExpr = e.toString().split(":")[2];  //se obtiene el tipo de dato de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
+    String codigo = ""; 
 
-    switch(tipoExpr){
+    switch(tipoExpr){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";   
             break;
@@ -1053,16 +1052,16 @@ sendParameters ::= expression:e
             break;
     } 
 
-    RESULT = e.toString().split(":")[0] + "\n" + codigo;
+    RESULT = e.toString().split(":")[0] + "\n" + codigo; //se genera el codigo mips
 :}
 
 | sendParameters:sp COMMA expression:e
 {:
-    String tipoExpr = e.toString().split(":")[2];
-    String lastRegister = e.toString().split(":")[1];
+    String tipoExpr = e.toString().split(":")[2]; //se obtiene el tipo de dato de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
     String codigo = "";
 
-    switch(tipoExpr){
+    switch(tipoExpr){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             codigo = "sw " + lastRegister + ", param" + cantParams++ + "\n";   
             break;
@@ -1087,22 +1086,22 @@ sendParameters ::= expression:e
             break;
     } 
 
-    RESULT = sp.toString() + "\n" + e.toString().split(":")[0] + "\n" + codigo;
+    RESULT = sp.toString() + "\n" + e.toString().split(":")[0] + "\n" + codigo; //se genera el codigo mips
 
 :};
 
 callFunction ::= IDENTIFIER:id LPAREN sendParameters:sp  RPAREN
 {:
 
-    String sendParams = sp.toString();
-    ArrayList<String> paramsIds = getFuncParamsIds(tablasDeSimbolos.get(id.toString()));
+    String sendParams = sp.toString(); //se obtiene el codigo mips de los parametros
+    ArrayList<String> paramsIds = getFuncParamsIds(tablasDeSimbolos.get(id.toString())); //se obtienen los identificadores de los parametros
     String codigo = "";
 
-    for (int i = 0; i< paramsIds.size(); i++){
+    for (int i = 0; i< paramsIds.size(); i++){ //se genera el codigo mips para los parametros
        sendParams = sendParams.replace("param"+i, paramsIds.get(i));
     }
 
-    codigo = sendParams + "jal "+id.toString()+ ":"+ id.toString();
+    codigo = sendParams + "jal "+id.toString()+ ":"+ id.toString(); //se genera el codigo mips
     cantParams = 0;
     RESULT = codigo;
 
@@ -1110,7 +1109,7 @@ callFunction ::= IDENTIFIER:id LPAREN sendParameters:sp  RPAREN
 
 callFunction ::= IDENTIFIER:id LPAREN RPAREN
 {:
-    String codigo = "jal "+id.toString()+ ":"+ id.toString();
+    String codigo = "jal "+id.toString()+ ":"+ id.toString(); //se genera el codigo mips
     RESULT = codigo;
 
 :};
@@ -1118,19 +1117,19 @@ callFunction ::= IDENTIFIER:id LPAREN RPAREN
 
 callFunction_statement ::= callFunction:cf ENDLINE
 {:
-        RESULT = cf.toString().split(":")[0];
+        RESULT = cf.toString().split(":")[0]; //se genera el codigo mips
 :};
 
 return_statement ::= RETURN SEPARATOR expression:e ENDLINE
 {:
 
-    String codigo = e.toString().split(":")[0] + "\n";
-    String move="";
-    String tipo = e.toString().split(":")[2];
-    String lastRegister = e.toString().split(":")[1];
-    switch(tipo){
+    String codigo = e.toString().split(":")[0] + "\n"; //se obtiene el codigo mips de la expresion
+    String move=""; 
+    String tipo = e.toString().split(":")[2]; //se obtiene el tipo de dato de la expresion
+    String lastRegister = e.toString().split(":")[1]; //se obtiene el ultimo registro generado
+    switch(tipo){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
-            variables.append("return_" +currentHash+": .word 0\n");
+            variables.append("return_" +currentHash+": .word 0\n"); 
             move = "sw "+lastRegister+", return_" +currentHash;
             break;
         case "float":
@@ -1203,7 +1202,7 @@ statements ::= statements:sts statement:st
 parameter ::= type:t SEPARATOR IDENTIFIER:idParam
 {:
      
-    switch(t.toString()){
+    switch(t.toString()){ //dependiendo del tipo de dato se genera el codigo mips
         case "int":
             variables.append(idParam.toString()+": .word 0\n");
             break;
@@ -1224,11 +1223,11 @@ parameter ::= type:t SEPARATOR IDENTIFIER:idParam
     }
   
     //Agregar a la tabla de simbolos
-    String[] symbol = new String[3];
-    symbol[0] = "Parametro";
-    symbol[1] = idParam.toString();
-    symbol[2] = t.toString();
-    tablasDeSimbolos.get(currentHash).add(symbol);
+    String[] symbol = new String[3]; //se crea el arreglo para agregar a la tabla de simbolos
+    symbol[0] = "Parametro"; //se agrega el tipo de simbolo
+    symbol[1] = idParam.toString(); //se agrega el identificador
+    symbol[2] = t.toString(); //se agrega el tipo de dato
+    tablasDeSimbolos.get(currentHash).add(symbol); //se agrega el simbolo a la tabla de simbolos
   
 :};
 
@@ -1242,26 +1241,26 @@ functionIdentifier ::= type:t SEPARATOR IDENTIFIER :idFunc
 {:
 
     //  Definir el tipo de tabla
-        String tipoTabla = "main";
+        String tipoTabla = "main"; //se define el tipo de tabla
         if (idFunc.toString().equals("main")){
-        tipoTabla = "Tipo: main ";
+        tipoTabla = "Tipo: main "; //se define el tipo de tabla
         }
         else{
-        tipoTabla = "Tipo: funcion ";
+        tipoTabla = "Tipo: funcion "; //se define el tipo de tabla
         }
 
     // Crear tabla de simbolos para la funcion
-        currentHash = idFunc.toString();
-        ArrayList<String[]> tabla = new ArrayList<>();
-        String[] tipo = new String[2];
-        tipo[0] = tipoTabla;
-        tipo[1] = t.toString();
-        tabla.add(tipo);
-        tablasDeSimbolos.put(currentHash, tabla);
+        currentHash = idFunc.toString(); //se obtiene el identificador de la funcion
+        ArrayList<String[]> tabla = new ArrayList<>(); //se crea la tabla de simbolos
+        String[] tipo = new String[2]; //se crea el arreglo para agregar a la tabla de simbolos
+        tipo[0] = tipoTabla; //se agrega el tipo de simbolo
+        tipo[1] = t.toString(); //se agrega el tipo de dato
+        tabla.add(tipo);    //se agrega el simbolo a la tabla de simbolos
+        tablasDeSimbolos.put(currentHash, tabla); //se agrega la tabla de simbolos a la tabla de simbolos global
 
        //Codigo MIPS
         //currentTemp = 1;
-        String codigo = idFunc.toString()+":\n";
+        String codigo = idFunc.toString()+":\n"; //se genera el codigo mips
         RESULT = codigo;
 
 
@@ -1271,16 +1270,16 @@ function ::= functionIdentifier:fi LPAREN parameters RPAREN BLOCKSTART statement
 {:
 
 
-    String cierreFuncion = "\nend_"+fi.toString();
-    String code = fi.toString() + st.toString() + cierreFuncion ;
-    RESULT = code;
+    String cierreFuncion = "\nend_"+fi.toString(); //se genera el codigo mips para el cierre de la funcion
+    String code = fi.toString() + st.toString() + cierreFuncion ; //se genera el codigo mips
+    RESULT = code; //se genera el codigo mips
 
 :}
 | functionIdentifier:fi LPAREN  RPAREN BLOCKSTART statements:st BLOCKEND
 {:
    
-    String cierreFuncion = "\nend_"+fi.toString();
-    String code = fi.toString() + st.toString() + cierreFuncion;
+    String cierreFuncion = "\nend_"+fi.toString(); //se genera el codigo mips para el cierre de la funcion
+    String code = fi.toString() + st.toString() + cierreFuncion; //se genera el codigo mips
     RESULT = code;
 
 :};
@@ -1311,7 +1310,7 @@ globalVariables ::= globalVariable: gv
 | globalVariables:gvs globalVariable:gv
 {: 
     
-    RESULT = gvs.toString()+gv.toString(); 
+    RESULT = gvs.toString()+gv.toString();  //se genera el codigo mips
 
 :};
 
@@ -1322,24 +1321,24 @@ program ::= globalVariables
 
     String dataSection = ".data\n";
     String textSection = ".text\n";
-    mipsCode.append(dataSection);
-    mipsCode.append(variables.toString());
-    mipsCode.append(textSection);
-    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+    mipsCode.append(dataSection); //se genera el codigo mips
+    mipsCode.append(variables.toString()); //se genera el codigo mips
+    mipsCode.append(textSection); //se genera el codigo mips
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall"); //se genera el codigo mips
 
 :}
 
 | functions:fs
 {:
 
-    String dataSection = ".data\n";
-    String textSection = ".text\n";
-    String code = fs.toString();
-    mipsCode.append(dataSection);
-    mipsCode.append(variables.toString());
-    mipsCode.append(textSection);
-    mipsCode.append(code);
-    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+    String dataSection = ".data\n"; //se genera el codigo mips
+    String textSection = ".text\n"; //se genera el codigo mips
+    String code = fs.toString(); //se genera el codigo mips
+    mipsCode.append(dataSection); //se genera el codigo mips
+    mipsCode.append(variables.toString()); //se genera el codigo mips
+    mipsCode.append(textSection); //se genera el codigo mips
+    mipsCode.append(code); //se genera el codigo mips
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall"); //se genera el codigo mips
 
 
 :}
@@ -1347,14 +1346,14 @@ program ::= globalVariables
 | globalVariables:gvs functions:fs
 {:
 
-    String dataSection = ".data\n";
-    String textSection = ".text\n";
-    String code = fs.toString();
-    mipsCode.append(dataSection);
-    mipsCode.append(variables.toString());
-    mipsCode.append(textSection);
-    mipsCode.append(code);
-    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall");
+    String dataSection = ".data\n"; //se genera el codigo mips
+    String textSection = ".text\n"; //se genera el codigo mips
+    String code = fs.toString(); //se genera el codigo mips
+    mipsCode.append(dataSection); //se genera el codigo mips
+    mipsCode.append(variables.toString()); //se genera el codigo mips
+    mipsCode.append(textSection); //se genera el codigo mips
+    mipsCode.append(code); //se genera el codigo mips
+    mipsCode.append("\nendProgram:\nli $v0, 10 \nsyscall"); //se genera el codigo mips
 
 :};
 
