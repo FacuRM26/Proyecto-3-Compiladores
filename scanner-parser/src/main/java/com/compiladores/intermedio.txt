@@ -1,33 +1,22 @@
 
-begin_func_miFunc:
-data_int dif
-data_char otra
-miFunc_for_1:
-data_Int ini_miFunc_for_1
-t1 = 10
-ini_miFunc_for_1 = t1
-data_Int fin_miFunc_for_1
-t2 = 30
-fin_miFunc_for_1 = t2
-data_Int step_miFunc_for_1
-t3 = 2
-step_miFunc_for_1 = t3
-miFunc_for_1_condition:
-t5 = ini_miFunc_for_1
-t6 = fin_miFunc_for_1
-t7 = t5 < t6
-if t7 goto miFunc_for_1_bloque
-goto miFunc_for_1_bloque_end
-miFunc_for_1_inc: 
-t8 =step_miFunc_for_1
-t9= ini_miFunc_for_1
-t10 = t9 + t8
-ini_miFunc_for_1 = t10
-goto miFunc_for_1_condition
-miFunc_for_1_bloque:
-param dif
-t4 = call read, 1
-goto miFunc_for_1_inc
-miFunc_for_1_bloque_end:
-t11 = 1.1
-return t11
+begin_func_suma:
+data_float num1
+data_float num2
+t1 = num1
+t2 = num2
+t3 = t1+t2
+return t3
+begin_func_main:
+data_float floa
+t1 = 1.0
+floa = t1
+t2 = 3.0
+param t2
+t3 = 2.0
+param t3
+t4 = call suma, 2
+t5 = 5.0
+t6 = floa
+t7 = t5+t6
+t8 = t4+t7
+PRINT t8
